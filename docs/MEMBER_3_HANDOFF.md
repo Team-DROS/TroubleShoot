@@ -37,7 +37,7 @@ the frontend never receives that key. Hosted live inference remains untested.
 
 ## Evidence wording
 
-- Member 3: 154 unit + 41 API tests passed on Windows, plus 5 synthetic web tests.
+- Member 3: 154 unit + 42 API tests passed on Windows, plus 5 synthetic web tests.
   Unit suite includes Member 1's two Windows-only PowerShell worker tests.
   API suite also includes actual read-only persistent worker reuse on Windows;
   all mutation/provider fixtures are synthetic. Wheel/dependency checks pass.

@@ -10,10 +10,11 @@ import tempfile
 import unittest
 from datetime import datetime, timezone
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
-from troubleshoot.contracts import ActionProposal, Check, Observation, Target
+from troubleshoot.contracts import ActionProposal, Check, ContractError, Observation, Target
 from troubleshoot.desktop.executor import WindowObservation
+from troubleshoot.desktop.mouse import MOUSE_VALIDATORS
 from troubleshoot.runtime.native import NativeExecutorAdapter, native_executor_from_env
 from troubleshoot.runtime.ports import RuntimeFailure
 from troubleshoot.runtime.powershell_worker import PersistentPowerShellWorker
@@ -100,6 +101,31 @@ class SyntheticDesktop:
 
 
 class RecoveryIntegrationTests(unittest.IsolatedAsyncioTestCase):
+    async def test_verified_checkbox_workflow_never_offers_or_dispatches_mouse_tools(self):
+        with tempfile.TemporaryDirectory() as directory:
+            desktop = SyntheticDesktop(Path(directory))
+
+            async def symptom(action, complaint):
+                return [Check('SYNTHETIC symptom', 'On', desktop.state, desktop.state == 'On', stamp())]
+
+            adapter = NativeExecutorAdapter(desktop=desktop, recovery_dir=directory,
+                                           desktop_repairs=True, symptom_verifier=symptom)
+            self.assertTrue(adapter.desktop_repairs)
+            self.assertEqual(set(adapter.operations_for(desktop.target)), {'inspect_target', 'toggle_checkbox'})
+            observation = (await adapter.observe(desktop.target)).observation
+            authorize = AsyncMock(return_value=True)
+            for operation in MOUSE_VALIDATORS:
+                with self.subTest(operation=operation):
+                    self.assertNotIn(operation, adapter.operations)
+                    self.assertNotIn(operation, adapter.status()['operations'])
+                    action = ActionProposal('unsupported-mouse', operation, {}, desktop.target,
+                                            observation.observation_id)
+                    with self.assertRaises(ContractError):
+                        await adapter.execute_authorized(action, observation, 'repair', asyncio.Event(), 'run', authorize)
+            authorize.assert_not_called()
+            self.assertEqual(desktop.input_count, 0)
+            self.assertFalse(list(Path(directory).glob('*.json')))
+
     async def test_checkbox_wrapper_retains_baseline_and_startup_blocks_new_repairs(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory)
