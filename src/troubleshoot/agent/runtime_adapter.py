@@ -75,7 +75,9 @@ class LocalGemmaAdapter:
     """Implements Member 3's proposed provider hook on top of a Member 2 Provider."""
 
     def __init__(self, provider: Provider, operations: dict | None = None, *,
-                 max_output_tokens: int = 400, timeout_seconds: float = 80.0, status_ttl: float = 5.0):
+                 max_output_tokens: int = 400, timeout_seconds: float = 150.0, status_ttl: float = 5.0):
+        # 150 s covers a cold model load plus one CPU decision and still fits
+        # inside Member 3's default 180 s run budget.
         self.provider = provider
         self.operations = dict(MEMBER1_OPERATIONS if operations is None else operations)
         self.max_output_tokens = max_output_tokens
@@ -157,5 +159,10 @@ class LocalGemmaAdapter:
 
 def local_adapter_from_env() -> LocalGemmaAdapter:
     """Convenience for Member 3's startup: `providers={"ollama": local_adapter_from_env()}`."""
+    import os
+
     from troubleshoot.providers.ollama import OllamaProvider
-    return LocalGemmaAdapter(OllamaProvider.from_env())
+    timeout = float(os.environ.get("TROUBLESHOOT_OLLAMA_TIMEOUT", "150"))
+    if not 5 <= timeout <= 600:
+        raise ValueError("TROUBLESHOOT_OLLAMA_TIMEOUT must be 5 to 600 seconds")
+    return LocalGemmaAdapter(OllamaProvider.from_env(), timeout_seconds=timeout)

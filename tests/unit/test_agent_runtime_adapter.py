@@ -136,6 +136,17 @@ class AdapterTests(unittest.TestCase):
         self.assertIn("<<EVIDENCE", provider.requests[0].user)
         self.assertIn("at most one action", provider.requests[0].user)
 
+    def test_timeout_default_and_environment(self):
+        from unittest import mock
+        from troubleshoot.agent.runtime_adapter import local_adapter_from_env
+        provider = Scripted(CONCLUDE)
+        decide(LocalGemmaAdapter(provider), payload())
+        self.assertEqual(provider.requests[0].timeout_seconds, 150.0)
+        with mock.patch.dict("os.environ", {"TROUBLESHOOT_OLLAMA_TIMEOUT": "60"}):
+            self.assertEqual(local_adapter_from_env().timeout_seconds, 60.0)
+        with mock.patch.dict("os.environ", {"TROUBLESHOOT_OLLAMA_TIMEOUT": "9999"}), self.assertRaises(ValueError):
+            local_adapter_from_env()
+
     def test_status_mapping_and_cache(self):
         self.assertEqual(LocalGemmaAdapter(Scripted()).status()["readiness"], "unverified")
         self.assertEqual(LocalGemmaAdapter(Scripted(ok=True)).status()["readiness"], "responding")

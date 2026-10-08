@@ -22,7 +22,7 @@ python -m troubleshoot.agent.cli eval  --record docs/evidence/local-model
 python -m troubleshoot.agent.cli vision --record docs/evidence/local-model
 ```
 
-Settings via environment: `TROUBLESHOOT_OLLAMA_MODEL` (default `gemma4:e2b`), `TROUBLESHOOT_OLLAMA_URL` (default `http://127.0.0.1:11434`), `TROUBLESHOOT_OLLAMA_ALLOW_LAN=1` to permit a non-loopback runtime such as the host seen from the VirtualBox guest. A LAN runtime is reported as `locality: "lan"`, never as local.
+Settings via environment: `TROUBLESHOOT_OLLAMA_MODEL` (default `gemma4:e2b`), `TROUBLESHOOT_OLLAMA_URL` (default `http://127.0.0.1:11434`), `TROUBLESHOOT_OLLAMA_TIMEOUT` (seconds per model decision through the runtime adapter, default 150, allowed 5 to 600), `TROUBLESHOOT_OLLAMA_ALLOW_LAN=1` to permit a non-loopback runtime such as the host seen from the VirtualBox guest. A LAN runtime is reported as `locality: "lan"`, never as local.
 
 `smoke`, `eval` and `vision` use **real local inference** with **simulated tools and facts** (`agent/simulation.py`). They measure the model's decisions and the loop's safety behavior. They are not Windows troubleshooting evidence; Member 1's guest runs provide that. `vision` sends the **synthetic** screenshots in `docs/evidence/local-model/fixtures/` and removes the service state from the text facts, so a correct choice shows the model read the image.
 
