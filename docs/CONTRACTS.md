@@ -52,7 +52,8 @@ data: {"id":"3","type":"complete","timestamp":"2026-10-08T06:00:00+00:00","paylo
 Integration update: startup imports `local_adapter_from_env` from
 `agent/runtime_adapter.py`. Its hook matches the documented runtime shape.
 `providers/base.py`, `providers/ollama.py`, and `agent/` are imported unchanged
-from Member 2 `41b1c9b`. Provider failures surface safe `local_<code>` errors and
+from Member 2 `6ed184b`. Local decision timeout now defaults to 150 seconds.
+Provider failures surface safe `local_<code>` errors and
 never select hosted/fixture alternatives. The single-action runtime uses the
 adapter, not the separate multi-step Coordinator.
 
@@ -92,11 +93,24 @@ to the generic approval fields. It replaces the generic gate for native actions,
 so there is one exact human approval and no blanket native approver.
 
 Read-only window inspection and Windows diagnostics are enabled by default.
-Desktop mutation requires explicit scenario/recovery opt-in. `capture_target`
+The production launcher disables all desktop mutation until a real symptom
+verifier exists; an environment flag cannot enable it. Programmatic checkbox
+integration requires an injected verifier and uses the unchanged `CheckboxRecovery`
+wrapper, durable private baseline and existing session execution lock. Startup
+records block repairs; restoration requires a new approved owner context and is
+not exposed as an API/model action. Mouse and close are not runtime operations.
+`capture_target`
 is not offered until a scoped consented capture pipeline exists;
 `restore_spooler_stopped` is never in the model registry. Native recovery records
 are scanned at startup and pending records block repairs. PowerShell workers are
 included in the Python wheel.
+
+Startup uses a persistent, serialized PowerShell transport in Member 3's runtime
+paths. It invokes fixed unchanged Member 1 scripts through a cached runspace;
+request payloads cannot provide code, script paths or new operations. Calls are
+bounded to 20 seconds, and failures kill the process without replaying an action.
+This removes repeated process/type startup, not the five-second freshness gate.
+Actual Windows read-only reuse passed; guest execution timing remains pending.
 
 `runtime/ports.py` provides `Operation(validate, mutates, expected, recovery)`
 and `Snapshot(observation, facts)`. Native integration must supply:

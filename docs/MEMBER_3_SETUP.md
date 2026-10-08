@@ -33,13 +33,14 @@ or silently falls back. Optional hosted Gemma is still separate and consented.
 
 ## Local Gemma and native Windows integration
 
-The integrated source comes from Member 2 revision `41b1c9b` and Member 1 revision
-`7623bc7`, merged with their history intact. The startup configuration is:
+The integrated source comes from Member 2 revision `6ed184b` and Member 1 revision
+`3edf350`, merged with their history intact. The startup configuration is:
 
 ```env
 TROUBLESHOOT_OLLAMA_URL=http://127.0.0.1:11434
 TROUBLESHOOT_OLLAMA_MODEL=gemma4:e2b
 TROUBLESHOOT_OLLAMA_ALLOW_LAN=0
+TROUBLESHOOT_OLLAMA_TIMEOUT=150
 TROUBLESHOOT_DESKTOP_REPAIRS=0
 ```
 
@@ -80,10 +81,13 @@ Pending JSON records are reported in `/api/status` and block new repairs at
 startup. They require operator inspection; there is no automatic startup restore
 or API to dismiss/delete records. Keep this path stable across restarts.
 
-Desktop changes are disabled by default because arbitrary controls/closing an app
-have no generic rollback. Set `TROUBLESHOOT_DESKTOP_REPAIRS=1` only for an explicitly
-selected scenario with a documented human recovery. Approved desktop changes are
-journaled and retain a recovery blocker until operator inspection. Screenshot
+The launcher keeps desktop changes disabled even if `TROUBLESHOOT_DESKTOP_REPAIRS=1`.
+No real application symptom verifier is integrated. Programmatic injection of an
+explicit symptom verifier can expose only `toggle_checkbox`, wrapped in Member 1's
+`CheckboxRecovery`; its durable baseline remains a blocker until separately
+approved restoration/operator inspection. There is no recovery API yet. Mouse
+and close primitives are merged but not exposed by this production runtime.
+Screenshot
 capture/model image transfer remains unavailable in the API/UI; no unconsented
 `capture_target` is offered to a model.
 
@@ -146,7 +150,8 @@ The production launcher never imports these fixtures. Ctrl+C stops either server
 
 Install `requirements.lock` first. The wheel includes browser assets under
 `share/troubleshoot/web`, and includes `windows/diagnostics.ps1` and
-`desktop/worker.ps1` as package data. Source and installed execution are supported.
+`desktop/worker.ps1`, `desktop/mouse-native.ps1`, and the Member 3 persistent
+transport as package data. Source and installed execution are supported.
 The dependency lock is an exact version resolution, not a hash-verified lock.
 
 ## Integration limits
@@ -154,10 +159,17 @@ The dependency lock is an exact version resolution, not a hash-verified lock.
 - One action per run; four concurrent runs, at most 100 retained runs. Completed
   runs without pending/failed recovery are evicted oldest first. Recovery blockers
   are retained. Events and approvals are process-local memory.
-- Overall run budget: 180 seconds. Local adapter inference limit: 80 seconds.
+- Production overall run budget: 300 seconds. Local adapter inference limit:
+  150 seconds by default, configurable with `TROUBLESHOOT_OLLAMA_TIMEOUT` (5–600).
+  Longer model limits can still hit the overall run budget.
   Hosted transport: 25-second network timeout. The production launcher gives
   observation/verification calls 45 seconds; native workers have their own bounded
-  20-second calls. Approval expires after at most 60 seconds, but the observed
+  20-second calls. A serialized persistent PowerShell process invokes unchanged
+  owner scripts and caches native types between observations/actions. Errors and
+  timeouts discard the process with no automatic retry. It is closed on shutdown.
+  Recovery ACL preparation occurs before starting a repair run, outside the
+  freshness window. Guest latency still requires measurement; slow/changed
+  observations continue to fail closed. Approval expires after at most 60 seconds, but the observed
   target must still satisfy the existing **five-second** freshness policy.
   Slow approvals therefore fail closed and require a new run. Refresh/reproposal
   UX is pending; do not weaken freshness to make a demo pass.
@@ -168,8 +180,11 @@ The dependency lock is an exact version resolution, not a hash-verified lock.
 - Recovery is reported and pending/failed recovery blocks further mutations.
   Native service recovery and durable blockers are integrated; a recovery endpoint
   and generic desktop rollback remain unavailable.
-- Real local inference with native execution in one disposable guest run is still
-  pending on a teammate's model/VM machine. No model/VM is required to run tests.
+- Real Gemma plus native checkbox input/verification/restoration passed Member 1's
+  guest developer harness using a synthetic UI. Combined authenticated API/UI
+  guest execution remains pending. Live vision returned unknown and blocked input;
+  print verification is blocked because no printer is installed. No model/VM is
+  required to run tests.
 - This is a local single-user integration build, not a hardened multi-user server.
   The bearer token grants access to all runs in this one process. There is no
   remote deployment, publication or event submission in this work.

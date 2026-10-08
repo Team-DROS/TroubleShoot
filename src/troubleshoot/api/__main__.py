@@ -21,7 +21,7 @@ def main():
         parser.error("port must be between 1024 and 65535")
     token = os.getenv("TROUBLESHOOT_SESSION_TOKEN") or secrets.token_urlsafe(32)
     manager = SessionManager(providers={"ollama": local_adapter_from_env(), "gemma_api": GemmaAPI()},
-                             executor=native_executor_from_env(), tool_seconds=45)
+                             executor=native_executor_from_env(), tool_seconds=45, run_seconds=300)
     app = create_app(manager, token, port=args.port)
     print(f"Open http://127.0.0.1:{args.port}")
     print(f"Local session token (paste into UI): {token}")
