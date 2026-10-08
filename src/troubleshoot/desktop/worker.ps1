@@ -5,7 +5,7 @@ try {
     Add-Type -AssemblyName UIAutomationClient
     Add-Type -AssemblyName UIAutomationTypes
     Add-Type -AssemblyName System.Drawing
-    Add-Type @'
+    if(-not ('TSWindow' -as [type])) { Add-Type @'
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
@@ -35,6 +35,7 @@ public static class TSWindow {
     public static string Title(IntPtr h){var b=new StringBuilder(256);GetWindowText(h,b,256);return b.ToString();}
 }
 '@
+    }
     [TSWindow]::SetThreadDpiAwarenessContext([IntPtr](-4)) | Out-Null
     $raw=[Console]::In.ReadToEnd()
     $payload=if($raw.Trim()){$raw|ConvertFrom-Json}else{[pscustomobject]@{}}

@@ -4,12 +4,12 @@ Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 $authRoot=Join-Path $env:LOCALAPPDATA 'TroubleShootEvent\vm-auth'
 New-Item -ItemType Directory -Force -Path $authRoot | Out-Null
-$acl=Get-Acl -LiteralPath $authRoot
+$acl=[IO.Directory]::GetAccessControl($authRoot)
 $acl.SetAccessRuleProtection($true,$false)
 $identity=[Security.Principal.WindowsIdentity]::GetCurrent().User
 $rule=New-Object Security.AccessControl.FileSystemAccessRule($identity,'FullControl','ContainerInherit,ObjectInherit','None','Allow')
 $acl.AddAccessRule($rule)
-Set-Acl -LiteralPath $authRoot -AclObject $acl
+[IO.Directory]::SetAccessControl($authRoot,$acl)
 $form=New-Object Windows.Forms.Form
 $form.Text='TroubleShoot: Windows test VM login'
 $form.Size=New-Object Drawing.Size(440,245)

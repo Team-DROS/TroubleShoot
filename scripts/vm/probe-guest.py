@@ -6,6 +6,7 @@ It transfers only guest-probe.ps1 and never receives a password on its CLI.
 import json
 import os
 import subprocess
+import sys
 from pathlib import Path
 
 
@@ -33,10 +34,10 @@ def main():
         return result.stdout
     try:
         invoke('mkdir', ['--parents', directory])
-        invoke('copyto', ['--target-directory', directory, str(Path(__file__).with_name('guest-probe.ps1'))])
+        invoke('copyto', ['--target-directory', directory + '\\', str(Path(__file__).with_name('guest-probe.ps1'))])
         powershell = r'C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe'
-        output = invoke('run', ['--exe', powershell, '--timeout', '30000', '--wait-stdout', '--wait-stderr',
-                                '--', powershell, '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass',
+        output = invoke('run', ['--exe', powershell, '--timeout', '45000', '--wait-stdout', '--wait-stderr',
+                                '--', 'powershell.exe', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass',
                                 '-File', directory + r'\guest-probe.ps1'])
         for line in output.splitlines():
             if line.strip().startswith('{'):
@@ -47,8 +48,9 @@ def main():
             raise SystemExit('Guest produced no structured probe; no live result claimed.')
     finally:
         # Exact validated local file only, never recursive deletion.
-        password_file.unlink(missing_ok=True)
-        auth_file.unlink(missing_ok=True)
+        if '--keep-login' not in sys.argv:
+            password_file.unlink(missing_ok=True)
+            auth_file.unlink(missing_ok=True)
 
 
 if __name__ == '__main__':
