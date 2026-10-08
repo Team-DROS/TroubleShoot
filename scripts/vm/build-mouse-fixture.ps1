@@ -11,12 +11,27 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Automation;
 using System.Windows.Threading;
+using System.Windows.Media;
 public static class FreshMouseFixture {
     [STAThread] public static void Main() {
         Application app=new Application();Window window=new Window();
+        bool demo=Environment.GetEnvironmentVariable("TROUBLESHOOT_DEMO")=="1";
         window.Title="TroubleShoot mouse fixture";window.Width=620;window.Height=680;
         window.WindowStartupLocation=WindowStartupLocation.CenterScreen;
         Grid grid=new Grid();StackPanel panel=new StackPanel();panel.Margin=new Thickness(20);grid.Children.Add(panel);window.Content=grid;
+        TextBlock stage=null;
+        if(demo) {
+            window.Title="TroubleShoot — live Windows cursor demo";window.Width=760;window.Height=740;
+            window.Background=new SolidColorBrush(Color.FromRgb(15,23,42));
+            panel.Resources.Add(typeof(TextBlock),new Style(typeof(TextBlock)){
+                Setters={new Setter(TextBlock.ForegroundProperty,Brushes.White),new Setter(TextBlock.FontSizeProperty,16.0)}});
+            TextBlock title=new TextBlock();title.Text="TroubleShoot | Computer use";title.FontSize=28;title.FontWeight=FontWeights.Bold;
+            panel.Children.Add(title);
+            TextBlock disclosure=new TextBlock();disclosure.Text="LIVE CONTROLLER DEMO • Gemma integration pending";
+            disclosure.FontSize=13;disclosure.Margin=new Thickness(0,8,0,18);panel.Children.Add(disclosure);
+            stage=new TextBlock();stage.Text="Ready: observe → act → verify";stage.Foreground=Brushes.LightGreen;
+            stage.Margin=new Thickness(0,0,0,15);panel.Children.Add(stage);
+        }
         int clicks=0,doubles=0;bool cancelOnClick=false;
         string cancelPath=Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),"cancel-mid");
         TextBlock clickState=new TextBlock();clickState.Text="Clicks: 0";
@@ -45,7 +60,7 @@ public static class FreshMouseFixture {
         secret.Height=45;secret.Margin=new Thickness(20,20,20,0);
         Button overlay=new Button();overlay.Content="Toggle secret overlay";overlay.Height=30;
         overlay.Click+=(s,e)=>{if(grid.Children.Contains(secret))grid.Children.Remove(secret);else grid.Children.Add(secret);};
-        panel.Children.Add(overlay);
+        if(!demo)panel.Children.Add(overlay);
         Window cover=null;Button coverButton=new Button();coverButton.Content="Toggle cover";coverButton.Height=30;
         coverButton.Click+=(s,e)=>{
             if(cover!=null){cover.Close();cover=null;}
@@ -55,12 +70,17 @@ public static class FreshMouseFixture {
                 cover.Left=point.X;cover.Top=point.Y;cover.ShowActivated=false;cover.Topmost=true;
                 cover.Content=new TextBlock(){Text="Covered fixture button"};cover.Show();
             }
-        };panel.Children.Add(coverButton);
+        };if(!demo)panel.Children.Add(coverButton);
         Button arm=new Button();arm.Content="Arm cancellation";arm.Height=25;
-        arm.Click+=(s,e)=>cancelOnClick=true;panel.Children.Add(arm);
+        arm.Click+=(s,e)=>cancelOnClick=true;if(!demo)panel.Children.Add(arm);
+        if(demo){panel.Children.Remove(resize);TextBlock stop=new TextBlock();stop.Text="Hold Escape to stop further input • Synthetic app, not a real repair";stop.FontSize=13;stop.Margin=new Thickness(0,15,0,0);panel.Children.Add(stop);}
         DispatcherTimer timer=new DispatcherTimer();timer.Interval=TimeSpan.FromMilliseconds(200);
         string cleanup=System.Reflection.Assembly.GetExecutingAssembly().Location+".cleanup";
-        timer.Tick+=(s,e)=>{if(File.Exists(cleanup)){timer.Stop();window.Close();}};timer.Start();
+        string stagePath=Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),"demo-stage.txt");
+        timer.Tick+=(s,e)=>{
+            if(demo && File.Exists(stagePath)){try{stage.Text=File.ReadAllText(stagePath);}catch{}}
+            if(File.Exists(cleanup)){timer.Stop();window.Close();}
+        };timer.Start();
         app.Run(window);
     }
 }

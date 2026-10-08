@@ -1,6 +1,7 @@
 param([ValidateSet('list_targets','observe','capture','toggle_checkbox','graceful_close','mouse_move','mouse_click','mouse_double_click','mouse_scroll','mouse_drag')][string]$Operation)
 $ErrorActionPreference='Stop'
 [Console]::OutputEncoding=New-Object Text.UTF8Encoding($false)
+$inputMutex=$null;$inputAcquired=$false
 try {
     Add-Type -AssemblyName UIAutomationClient
     Add-Type -AssemblyName UIAutomationTypes
@@ -120,14 +121,13 @@ public static class TSWindow {
         if($expected.dpi -ne [int][TSWindow]::GetDpiForWindow($h)){throw 'geometry_changed'}
         if([TSWindow]::GetForegroundWindow() -ne $h){throw 'foreground_changed'}
     }
+    if($Operation -like 'mouse_*' -or $Operation -in @('toggle_checkbox','graceful_close')) {
+        $inputMutex=New-Object Threading.Mutex($false,'Local\TroubleShoot.DesktopMouse')
+        try {$inputAcquired=$inputMutex.WaitOne(0)}catch [Threading.AbandonedMutexException] {$inputAcquired=$true;throw 'mouse_previous_crash'}
+        if(-not $inputAcquired){throw 'mouse_busy'}
+    }
     if($Operation -like 'mouse_*') {
-        $mutex=New-Object Threading.Mutex($false,'Local\TroubleShoot.DesktopMouse')
-        $acquired=$false
-        try {
-            try {$acquired=$mutex.WaitOne(0)}catch [Threading.AbandonedMutexException] {$acquired=$true;throw 'mouse_previous_crash'}
-            if(-not $acquired){throw 'mouse_busy'}
-            $result=Invoke-MouseOperation $Operation $payload
-        }finally{if($acquired){$mutex.ReleaseMutex()};$mutex.Dispose()}
+        $result=Invoke-MouseOperation $Operation $payload
     } elseif($Operation -eq 'list_targets') {
         $targets=@()
         foreach($handle in [TSWindow]::Visible()) {
@@ -205,4 +205,6 @@ public static class TSWindow {
     $code=if($_.Exception.Message -in $known){$_.Exception.Message}else{'native_failure'}
     @{ok=$false;code=$code}|ConvertTo-Json -Compress
     exit 1
+}finally {
+    if($inputMutex){if($inputAcquired){$inputMutex.ReleaseMutex()};$inputMutex.Dispose()}
 }
