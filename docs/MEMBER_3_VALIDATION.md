@@ -1,5 +1,25 @@
 # Member 3 validation, 8 October 2026
 
+## Mouse registry follow-up
+
+The reported mouse registry/dispatcher gap is already excluded by `bc13ea7`:
+only inspection and explicitly verified checkbox integration can enter the
+desktop runtime registry. No `mouse_*` operation is offered, even with the
+programmatic checkbox verifier enabled; the environment flag cannot enable it.
+Added a regression covering all five owner mouse operations, checking registry
+and status omission, dispatch rejection before authorization, zero input and no
+recovery records. No owner files or native runtime behavior changed.
+
+```powershell
+$env:PYTHONPATH='src'
+.\.venv\Scripts\python -m unittest discover -s tests/api -q
+# PASS: 42 tests, 9.831 s on Windows
+```
+
+Current suite total: **196 Python + 5 web tests** (154 unchanged unit tests,
+42 API tests, 5 unchanged web tests). The mutation/approval regression uses
+synthetic fixtures. Earlier complete-suite commands/results remain below.
+
 ## Latest owner integration — 13:30 IST onwards
 
 Fetched all branch refs explicitly because the single-branch clone's default
