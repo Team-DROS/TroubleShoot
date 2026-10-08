@@ -1,6 +1,12 @@
 # TroubleShoot — complete from-scratch project context
 
-Updated 8 October 2026, Asia/Calcutta. **First shared foundation implemented: contract validation, synthetic fixture and unit tests. No running application, UI, model connection or Windows executor exists yet.** Read AGENTS.md, the rules snapshot, docs/PROVENANCE.md, docs/RESTART.md and your member assignment.
+Updated 8 October 2026, Asia/Calcutta. **Member 3 branch update: authenticated loopback API, bounded session/approval runtime, hosted Gemma transport and minimal browser UI are implemented and fixture-tested. Local Gemma and native Windows integration, real hosted inference and live repair remain pending.** Read AGENTS.md, the rules snapshot, docs/PROVENANCE.md, docs/RESTART.md and your member assignment.
+
+Current Member 3 setup/evidence: `docs/MEMBER_3_SETUP.md` and `docs/MEMBER_3_VALIDATION.md`.
+The planning sections below preserve the original team scope and implementation
+sequence; their initial "not implemented" statements describe the starting point.
+`docs/CONTRACTS.md` records the newer Member 3 integration surface. Member 1/2
+protocol agreement remains pending; their owned components have not been edited.
 
 ## 1. Organizer change and scope
 
