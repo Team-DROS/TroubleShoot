@@ -1,0 +1,47 @@
+diff --git a/src/troubleshoot/runtime/session.py b/src/troubleshoot/runtime/session.py
+index 1b04bf6..2f1bc4f 100644
+--- a/src/troubleshoot/runtime/session.py
++++ b/src/troubleshoot/runtime/session.py
+@@ -10,7 +10,7 @@ from datetime import datetime, timezone
+ from time import monotonic
+ 
+ from troubleshoot.contracts import (
+-    Check, ContractError, ExecutionResult, RunRequest, Target, event,
++    ActionProposal, Check, ContractError, ExecutionResult, RunRequest, Target, event,
+     parse_action, parse_decision, require_target, timestamp, verdict,
+ )
+ from troubleshoot.runtime.ports import RuntimeFailure
+@@ -192,6 +192,20 @@ class SessionManager:
+         action = parse_action(decision["action"], registry)
+         if snapshot is None:
+             raise ContractError("An action needs an observation")
++        # Model inference outlasts the freshness window: re-observe the same
++        # target and bind the proposal to that observation before approval.
++        if action.target != snapshot.observation.target or action.observation_id != snapshot.observation.observation_id:
++            raise ContractError("Action does not match observed target")
++        current = await self._tool(self.executor.observe(run.target))
++        current.observation.require_fresh(utcnow())
++        if (current.observation.target != snapshot.observation.target
++                or current.observation.bounds != snapshot.observation.bounds
++                or current.observation.dpi != snapshot.observation.dpi):
++            raise ContractError("Target changed while the model was deciding")
++        snapshot = current
++        action = ActionProposal(action.action_id, action.operation, action.arguments,
++                                action.target, snapshot.observation.observation_id)
++        self.emit(run, "observation", asdict(snapshot))
+         require_target(action, snapshot.observation, utcnow())
+         operation = operations[action.operation]
+         if run.request.mode == "diagnose" and operation.mutates:
+diff --git a/tests/api/test_sessions.py b/tests/api/test_sessions.py
+index 3913266..458543e 100644
+--- a/tests/api/test_sessions.py
++++ b/tests/api/test_sessions.py
+@@ -38,7 +38,7 @@ class SessionTests(unittest.IsolatedAsyncioTestCase):
+         self.approve(run)
+         self.assertEqual((await self.completed(run))["verdict"], "resolved")
+         self.assertEqual(self.executor.executions, 1)
+-        self.assertEqual(self.executor.observations, 2)
++        self.assertEqual(self.executor.observations, 3)  # initial, after inference, after approval
+ 
+     async def test_diagnose_never_mutates(self):
+         run = await self.start("diagnose")
