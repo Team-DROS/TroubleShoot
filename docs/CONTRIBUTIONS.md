@@ -66,11 +66,12 @@ is recorded as a contribution. Pending items are listed separately.
 |---|---|---|
 | Expand CLAUDE.md with agent entry-point list | ✅ Done | `ee18873` |
 | ATTRIBUTION.md — licenses, components, AI disclosure | ✅ Done | `4b100d6` |
-| CONTRIBUTIONS.md (this file) — per-member log | ✅ Done | this commit |
-| DEMO_SCRIPT.md — structured walkthrough | ✅ Done | see next commit |
-| SUBMISSION_CHECKLIST.md — updated with current status | ✅ Done | see next commit |
-| TEMPLATE_GUIDE.md — alignment checklist update | ✅ Done | see next commit |
-| README.md — template-aligned, fully honest | ✅ Done | see next commit |
+| CONTRIBUTIONS.md (this file) — per-member log | ✅ Done | `331236f` |
+| DEMO_SCRIPT.md — structured walkthrough | ✅ Done | `e33d7ec` |
+| SUBMISSION_CHECKLIST.md — updated with current status | ✅ Done | `c682de1` |
+| TEMPLATE_GUIDE.md — alignment checklist update | ✅ Done | `de66bc8` |
+| README.md — template-aligned, fully honest | ✅ Done | `b240eed` |
+| VALIDATION.md — deliverables table + pending-evidence sections | ✅ Done | `0b1909b` |
 
 ---
 
