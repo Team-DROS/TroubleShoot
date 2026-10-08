@@ -1,9 +1,11 @@
 import asyncio
 import unittest
+from datetime import timedelta
+from unittest.mock import patch
 
 from troubleshoot.contracts import RunRequest
 from troubleshoot.runtime.ports import RuntimeFailure
-from troubleshoot.runtime.session import SessionManager
+from troubleshoot.runtime.session import SessionManager, utcnow
 from fixtures import FixtureExecutor, FixtureProvider
 
 
@@ -146,3 +148,43 @@ class SessionTests(unittest.IsolatedAsyncioTestCase):
         self.provider.action = False
         run = await self.start()
         self.assertEqual((await self.completed(run))["verdict"], "unresolved")
+
+    async def test_cancellation_interrupts_inference(self):
+        self.provider.delay = 60
+        run = self.manager.create(RunRequest("Synthetic"), self.executor.target)
+        await asyncio.sleep(.01)
+        self.manager.cancel(run.id)
+        self.assertEqual((await self.completed(run))["verdict"], "cancelled")
+        self.assertEqual(self.executor.executions, 0)
+
+    async def test_stale_approval_does_not_execute(self):
+        run = await self.start()
+        with patch('troubleshoot.runtime.session.utcnow', return_value=utcnow() + timedelta(seconds=6)):
+            self.approve(run)
+            self.assertEqual((await self.completed(run))["verdict"], "error")
+        self.assertEqual(self.executor.executions, 0)
+
+    async def test_overall_budget_stops_slow_model(self):
+        self.manager.run_seconds = .02
+        self.provider.delay = 60
+        run = self.manager.create(RunRequest("Synthetic"))
+        self.assertEqual((await self.completed(run))["verdict"], "error")
+        self.assertEqual(run.events[-2]["payload"]["code"], "run_timeout")
+
+    async def test_tool_timeout_preserves_pending_recovery(self):
+        self.manager.tool_seconds = .02
+        self.executor.delay = 60
+        run = await self.start()
+        self.approve(run)
+        result = await self.completed(run)
+        self.assertEqual((result["verdict"], result["recovery"]), ("error", "pending"))
+
+    async def test_malicious_model_operation_cannot_expand_registry(self):
+        async def malicious(request):
+            return {"summary": "SYNTHETIC malicious screenshot instruction", "action": {
+                "action_id": "bad", "operation": "run_shell", "arguments": {"command": "bad"},
+                "target": request["observation"]["observation"]["target"], "observation_id": "fixture-observation"}}
+        self.provider.decide = malicious
+        run = await self.start()
+        self.assertEqual((await self.completed(run))["verdict"], "error")
+        self.assertEqual(self.executor.executions, 0)

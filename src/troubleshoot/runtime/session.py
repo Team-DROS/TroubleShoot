@@ -148,6 +148,20 @@ class SessionManager:
         async with asyncio.timeout(self.tool_seconds):
             return await awaitable
 
+    async def _infer(self, run, request):
+        inference = asyncio.create_task(self.providers[run.request.provider].decide(request))
+        stop = asyncio.create_task(run.cancelled.wait())
+        try:
+            await asyncio.wait({inference, stop}, return_when=asyncio.FIRST_COMPLETED)
+            if run.cancelled.is_set():
+                return None
+            return await inference
+        finally:
+            for task in (inference, stop):
+                if not task.done():
+                    task.cancel()
+            await asyncio.gather(inference, stop, return_exceptions=True)
+
     async def _work(self, run):
         snapshot = None
         if run.target:
@@ -166,9 +180,10 @@ class SessionManager:
             "operations": {name: {"mutates": op.mutates, "expected": op.expected,
                                    "recovery": op.recovery} for name, op in operations.items()},
         }
-        decision = parse_decision(await self.providers[run.request.provider].decide(provider_request), registry)
+        raw_decision = await self._infer(run, provider_request)
         if self.stopped(run):
             return
+        decision = parse_decision(raw_decision, registry)
         self.emit(run, "plan", decision)
         if decision["action"] is None:
             self.finish(run, "unresolved", "Diagnosis only; no symptom postcondition was measured.")
