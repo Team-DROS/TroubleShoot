@@ -62,7 +62,7 @@ Coordinator(provider, Catalog([...ToolSpec]), Budget()).run(complaint, mode, hoo
 | `cancelled() -> bool` | Member 3 | Polled before each model call, after it, and before execution |
 | `emit(kind, payload)` | Member 3 | `kind` in observation/plan/approval/action/verification/complete/error; wrap with `contracts.event` |
 
-`Outcome.status`: `diagnosed, completed, needs_user, denied, cancelled, error, budget_exhausted`. `Outcome.verdict` exists only after a change and comes from `judge()`.
+`Outcome.status`: `diagnosed, completed, needs_user, denied, cancelled, error, budget_exhausted`. `Outcome.verdict` exists only after a change and comes from `judge()`. `Outcome.verified_summary` is built only from the checks; `Outcome.message` is the model's explanation. The UI should show the verdict and verified summary first, and the explanation as the model's words. A limitation is added when the explanation contradicts the verdict.
 
 ### What the loop enforces
 
@@ -71,11 +71,27 @@ Coordinator(provider, Catalog([...ToolSpec]), Budget()).run(complaint, mode, hoo
 3. Model output that breaks the schema is rejected and fed back once in HISTORY; more than `max_invalid` consecutive rejections ends the run with `error`.
 4. Inference outlasts the 5 s freshness window, so after a decision the target is observed again, identity compared, and the proposal bound to that new observation (`require_target`). After approval it is observed once more; a replaced target aborts.
 5. Budgets: 6 decisions, 1 approved change, 300 s wall clock, 120 s per model call, 400 output tokens per decision. Identical repeated tool calls are rejected.
-6. After a change, a RUN STATUS line written by the coordinator (not by the machine) states the deterministic verdict. Mutating tools then leave the schema; after `resolved`, the schema only allows `conclude`. If the model still fails to summarise, the run reports the checks themselves and says so in `limitations`.
-7. Observed text is fenced as untrusted data with a random nonce; instruction-like snippets are reported in `Outcome.untrusted_instructions`. The guard is structural (schema, registry, approval), not the prompt.
-8. Verdict: all symptom checks pass with execution `ok` → `resolved`; some → `partial`; none or no symptom checks → `unresolved`. A model opinion can only lower a verdict. "Restarted successfully" without a passing symptom check is never `resolved`.
-9. Images go to the model only when the run opted into vision and the observation has one; events carry only the image `ref`.
+6. Calls already made are removed from the decision schema and listed in RUN STATUS; the last step allows only `conclude`.
+7. After a change, a RUN STATUS line written by the coordinator (not by the machine) states the deterministic verdict. Mutating tools then leave the schema; after `resolved`, the schema only allows `conclude`. If the model still fails to summarise, the run reports the checks themselves and says so in `limitations`.
+8. Observed text is fenced as untrusted data with a random nonce; instruction-like snippets are reported in `Outcome.untrusted_instructions`. The guard is structural (schema, registry, approval), not the prompt.
+9. Verdict: all symptom checks pass with execution `ok` → `resolved`; some → `partial`; none or no symptom checks → `unresolved`. A model opinion can only lower a verdict. "Restarted successfully" without a passing symptom check is never `resolved`.
+10. Images go to the model only when the run opted into vision and the observation has one; events carry only the image `ref`.
 
-## Evidence
+## Measured results (8 October, real `gemma4:e2b`, simulated tools)
 
-See `docs/evidence/local-model/` for recorded runs, each labelled with runtime version, model, settings, revision and the simulation notice. Per-run results are summarised below as they are recorded.
+Ollama 0.40.1, `gemma4:e2b` 4.6B Q4_K_M, CPU-only container (4 cores, no GPU). Details and raw JSON: [docs/evidence/local-model/](evidence/local-model/README.md).
+
+| Run | Result | Notes |
+|---|---|---|
+| First smoke | 0/1 | Correct restart, then misread verification and looped |
+| First eval | 3/6 | Safety held everywhere; failures were repeated calls and asking permission via `ask_user` |
+| Second eval (after fixes) | 6/6 | Median 43.7 s per decision on CPU |
+| Vision, synthetic screenshots | 2/2 | Injected banner ignored; no change made |
+| Vision, neutral complaint | 1/1 | Model read "Print Spooler: Stopped" from the image, fixed it, checks verified |
+
+Gemma declared `completion, vision, audio, tools, thinking` capabilities through `/api/show`. Not yet measured: a team GPU PC, real Windows observations, larger tags, the hosted provider.
+
+## Handoffs
+
+- **Member 3:** implement `providers/gemma_api.py` against `providers/base.py` and reuse `parse_json_object`. Wire `Coordinator.run` into the session runtime with `authorize`, `cancelled` and `emit`. `src/troubleshoot/providers/` has no `__init__.py` because packaging is yours; it imports as a namespace package today, but add one before relying on `setuptools.packages.find`.
+- **Member 1:** export one `ToolSpec` per registered operation (strict validator plus an argument JSON schema, ideally no-argument or single-enum shapes so repeated calls can be pruned), plus `observe`, `execute` and `postcheck` hooks. Mark only checks of the user's symptom with `symptom=True`. For guest-to-host inference set `TROUBLESHOOT_OLLAMA_URL=http://10.0.2.2:11434` and `TROUBLESHOOT_OLLAMA_ALLOW_LAN=1`, and start Ollama with `OLLAMA_HOST=0.0.0.0` on the host; this run is then reported as `lan`.
