@@ -1,4 +1,4 @@
-# Hacktoberfest Hack Day Coimbatore — team and agent rulebook
+# Hacktoberfest Hack Day Coimbatore, team and agent rulebook
 
 > Team update, 8 October 2026: the user now reports that organizers withdrew permission to reuse the earlier prototype. Start implementation from scratch. Earlier approval statements are superseded. This is user-reported organizer guidance; the dated snapshot below remains for reference. See docs/PROVENANCE.md and docs/RESTART.md.
 
@@ -42,29 +42,29 @@ The public registration questions request full name, college name, college-issue
 
 Listed hosts: Meghana K, Nitansh Shankar, Mahakisore M, Mrudula Pedamallu, Supriya K, Minoti Gupta, Bhargava Sri Sai M. K, and Naga sri Harini Bachu.
 
-## 3. Schedule and deadline — all times IST
+## 3. Schedule and deadline, all times IST
 
 | Time, 8 October | Official activity |
 |---|---|
-| 09:00–10:00 | Hall access and check-in; OrganizerHQ, team and primary-track verification, team formation and setup support |
-| 10:00–10:20 | Opening and challenge briefing: conduct, rules, Open-Source AI and Unplugged requirements, submission process, judging and deadlines |
-| 10:20–11:45 | Build Session I, with mentor support |
-| 11:45–12:00 | Snacks; build space remains open |
-| 12:00–13:00 | Build Session II |
-| 13:00–13:30 | Lunch; teams may continue working |
-| 13:30–15:45 | Build Session III: development, testing, documentation and demo preparation |
-| 15:45–16:00 | Snacks / refreshments |
-| 16:00–16:30 | Final submission window; one team member completes OrganizerHQ submission while refinements continue |
+| 09:00-10:00 | Hall access and check-in; OrganizerHQ, team and primary-track verification, team formation and setup support |
+| 10:00-10:20 | Opening and challenge briefing: conduct, rules, Open-Source AI and Unplugged requirements, submission process, judging and deadlines |
+| 10:20-11:45 | Build Session I, with mentor support |
+| 11:45-12:00 | Snacks; build space remains open |
+| 12:00-13:00 | Build Session II |
+| 13:00-13:30 | Lunch; teams may continue working |
+| 13:30-15:45 | Build Session III: development, testing, documentation and demo preparation |
+| 15:45-16:00 | Snacks / refreshments |
+| 16:00-16:30 | Final submission window; one team member completes OrganizerHQ submission while refinements continue |
 | **16:30** | **Build AND submission deadline** |
-| 16:30–17:40 | Judging and evaluations |
-| 17:40–17:50 | Score collection and initial shortlist / eligibility checks |
-| 17:50–18:00 | Closing, acknowledgements and group photo |
-| 18:00–19:00 | Participant dispersal and organizer wrap-up |
+| 16:30-17:40 | Judging and evaluations |
+| 17:40-17:50 | Score collection and initial shortlist / eligibility checks |
+| 17:50-18:00 | Closing, acknowledgements and group photo |
+| 18:00-19:00 | Participant dispersal and organizer wrap-up |
 | Following day, 9 October | Final results after score, challenge eligibility, repository and OrganizerHQ verification; announcement time/channel unspecified |
 
 Source: [event schedule](https://events.mlh.com/events/15020-hacktoberfest-hack-day-coimbatore-x-init-club-idea-club).
 
-**Schedule inconsistency:** the event header and linked calendar file say 09:00–17:00, but the detailed schedule continues through closing at 18:00 and wrap-up at 19:00. Do not infer a 17:00 submission deadline: the detailed schedule explicitly gives **16:30 IST**, equivalent to **11:00 UTC**. Confirm any organizer revision on site.
+**Schedule inconsistency:** the event header and linked calendar file say 09:00-17:00, but the detailed schedule continues through closing at 18:00 and wrap-up at 19:00. Do not infer a 17:00 submission deadline: the detailed schedule explicitly gives **16:30 IST**, equivalent to **11:00 UTC**. Confirm any organizer revision on site.
 
 **TEAM POLICY:** until the opening briefing establishes the allowed start precisely, treat **10:20 IST** as the project-build start. Before then perform only the preparation expressly permitted below. Aim to complete a valid submission by 16:15, leaving a 15-minute buffer; this buffer is our recommendation, not an official deadline. At 16:30 freeze implementation, builds and submission changes unless an organizer explicitly authorizes a correction or extension. Do not assume judging time permits more development.
 
@@ -113,11 +113,11 @@ The published brief invites building with Gemma 4, including text/image experien
 
 The signed-in form uses **challenge checkboxes** and asks which challenge(s) the project is submitted to. This supports selecting challenges in the UI; it does not prove that one project can win multiple prizes or remove primary-track restrictions. Confirm the relationship among primary track, Gemma sponsorship challenge and challenge selections.
 
-## 6. Agent Skill Open Standard — relevant only to skill entries
+## 6. Agent Skill Open Standard, relevant only to skill entries
 
 The event requires the standard but does not link a specific edition. The current [Agent Skills specification](https://agentskills.io/specification) is the technical reference checked for this guide; confirm the organizer's intended standard if they supply a different reference.
 
-A skill directory must contain `SKILL.md` with YAML frontmatter followed by Markdown instructions. Required metadata: `name` (1–64 lowercase alphanumeric/hyphen characters, no leading/trailing or consecutive hyphens, matching the directory name) and a nonempty `description` (up to 1,024 characters, describing function and when to use it). Optional fields include license, compatibility, metadata and allowed-tools; optional directories include scripts, references and assets. The specification recommends validating with `skills-ref validate ./my-skill`. Passing format validation does not prove challenge eligibility or practical usefulness.
+A skill directory must contain `SKILL.md` with YAML frontmatter followed by Markdown instructions. Required metadata: `name` (1-64 lowercase alphanumeric/hyphen characters, no leading/trailing or consecutive hyphens, matching the directory name) and a nonempty `description` (up to 1,024 characters, describing function and when to use it). Optional fields include license, compatibility, metadata and allowed-tools; optional directories include scripts, references and assets. The specification recommends validating with `skills-ref validate ./my-skill`. Passing format validation does not prove challenge eligibility or practical usefulness.
 
 **TEAM POLICY:** test that the target agent can load the skill and complete its intended workflow; retain test evidence. Do not claim standard compliance solely because a file is named `SKILL.md`.
 

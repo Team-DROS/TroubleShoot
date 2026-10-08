@@ -1,4 +1,4 @@
-# Member 4 — Lightweight documentation, hackathon template and submission preparation
+# Member 4, Lightweight documentation, hackathon template and submission preparation
 
 **Branch:** `member-4/docs-demo-submission`. **Hardware/workload:** No Gemma, API key or VM required; intentionally lighter workload.
 
@@ -22,7 +22,7 @@ The user supplied https://github.com/BIJJUDAMA/hacktoberfest-hack-day-coimbatore
 
 ## Done
 
-A concise truthful README/demo/submission/attribution update and a short pending-items list. Your role remains lighter than Members 1–3. No code fixes, VM installation, local-model download or hosted key acquisition is assigned to you. Optional slides/design/video editing are lower priority and not required to complete this role.
+A concise truthful README/demo/submission/attribution update and a short pending-items list. Your role remains lighter than Members 1-3. No code fixes, VM installation, local-model download or hosted key acquisition is assigned to you. Optional slides/design/video editing are lower priority and not required to complete this role.
 
 ## Prompt for your AI agent
 

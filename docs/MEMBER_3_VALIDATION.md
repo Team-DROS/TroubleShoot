@@ -20,7 +20,7 @@ Current suite total: **196 Python + 5 web tests** (154 unchanged unit tests,
 42 API tests, 5 unchanged web tests). The mutation/approval regression uses
 synthetic fixtures. Earlier complete-suite commands/results remain below.
 
-## Latest owner integration — 13:30 IST onwards
+## Latest owner integration, 13:30 IST onwards
 
 Fetched all branch refs explicitly because the single-branch clone's default
 fetch only updates Member 3. Merged Member 2 `6ed184b` in `4cdfda3` and Member 1
@@ -70,7 +70,7 @@ Exact additional read-only timing command:
 ```powershell
 $env:PYTHONPATH='src'
 @'
-import json,time
+import json, time
 from troubleshoot.runtime.powershell_worker import PersistentPowerShellWorker
 worker=PersistentPowerShellWorker()
 try:
@@ -113,7 +113,7 @@ Member 4's exact setup and evidence handoff is `docs/MEMBER_3_HANDOFF.md`.
 The local README draft is excluded from commits/pushes. Repository remains private;
 one PR into main is prepared for team review, not automatic merge.
 
-## Integration update — approximately 12:45–12:56 IST
+## Integration update, approximately 12:45-12:56 IST
 
 Member 3 merged Member 2 `41b1c9b` (merge `5ff128b`) and Member 1 `7623bc7`
 (merge `f1f9321`) without rebasing or changing their owned implementation/tests.
@@ -205,7 +205,7 @@ The existing local README draft was excluded from all integration commits.
 
 Branch: `member-3/backend-hosted-api`. Tested implementation revision:
 `36a0322`, followed by the recovery-retention regression fix (see branch history). Environment: Windows,
-Python 3.14.3, Node.js 24.18.0. Validation occurred approximately 11:40–11:52 IST.
+Python 3.14.3, Node.js 24.18.0. Validation occurred approximately 11:40-11:52 IST.
 
 ## Automated evidence
 

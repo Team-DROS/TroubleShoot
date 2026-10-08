@@ -1,6 +1,6 @@
 # Fresh project validation
 
-## Member 1 assistance check — 8 October 2026, 13:28 IST
+## Member 1 assistance check, 8 October 2026, 13:28 IST
 
 Prepared on the assisting teammate's PC by Umasuthan Palaniappan with Codex, not
 represented as new work performed on Member 1's guest. Source under test:
@@ -70,7 +70,7 @@ Desktop source revision `f4d5838`, 8 October 2026 at 06:33:55 UTC / 12:03:55 IST
 
 Fresh fixture state started checkbox Off; the native action set On and independently read On. Capture produced a 9824-byte PNG in memory; no image was retained in published evidence. Graceful close left two fixture windows, so it correctly reported incomplete; the fixture's explicit cleanup mechanism then exited it. These verify controller mechanics, not a real application symptom or Gemma image reasoning. Python approval/cancellation gates were unit tested separately, not claimed as a full guest API flow.
 
-Service worker/harness contents subsequently committed in `6ad86df`, at 06:30:14–06:30:15 UTC / 12:00:14–12:00:15 IST. Powered-off preflight snapshot was available. User approved Windows UAC manually; the fixed elevated guest harness observed baseline Running, injected Stopped, invoked the fresh `start_spooler` operation, freshly checked Running, and checked baseline restoration. Actual print verification is **false**. No host service or adapter was changed.
+Service worker/harness contents subsequently committed in `6ad86df`, at 06:30:14-06:30:15 UTC / 12:00:14-12:00:15 IST. Powered-off preflight snapshot was available. User approved Windows UAC manually; the fixed elevated guest harness observed baseline Running, injected Stopped, invoked the fresh `start_spooler` operation, freshly checked Running, and checked baseline restoration. Actual print verification is **false**. No host service or adapter was changed.
 
 Sanitized JSON reports are under `docs/evidence/windows/`. No credentials, private screenshots, prior demo footage or model results are included. Snapshot creation was verified; snapshot restore itself was not exercised.
 

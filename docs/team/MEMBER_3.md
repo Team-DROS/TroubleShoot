@@ -1,4 +1,4 @@
-# Member 3 — Backend API, hosted Gemma and minimal interface
+# Member 3, Backend API, hosted Gemma and minimal interface
 
 **Branch:** `member-3/backend-hosted-api`. **Hardware/workload:** No local Gemma or VM required. Hosted credentials, if available, enable real API smoke tests.
 

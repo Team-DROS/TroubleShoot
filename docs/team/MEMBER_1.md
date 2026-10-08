@@ -1,4 +1,4 @@
-# Member 1 — Windows tools, computer use and VM validation
+# Member 1, Windows tools, computer use and VM validation
 
 **Branch:** `member-1/windows-desktop-vm`. **Hardware/workload:** Local Gemma 4 + Windows VM; substantial technical role.
 

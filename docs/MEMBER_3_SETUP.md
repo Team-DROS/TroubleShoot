@@ -160,7 +160,7 @@ The dependency lock is an exact version resolution, not a hash-verified lock.
   runs without pending/failed recovery are evicted oldest first. Recovery blockers
   are retained. Events and approvals are process-local memory.
 - Production overall run budget: 300 seconds. Local adapter inference limit:
-  150 seconds by default, configurable with `TROUBLESHOOT_OLLAMA_TIMEOUT` (5–600).
+  150 seconds by default, configurable with `TROUBLESHOOT_OLLAMA_TIMEOUT` (5-600).
   Longer model limits can still hit the overall run budget.
   Hosted transport: 25-second network timeout. The production launcher gives
   observation/verification calls 45 seconds; native workers have their own bounded

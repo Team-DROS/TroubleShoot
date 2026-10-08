@@ -1,4 +1,4 @@
-# Member 2 — Local Gemma and agent reasoning
+# Member 2, Local Gemma and agent reasoning
 
 **Branch:** `member-2/local-gemma-agent`. **Hardware/workload:** Local Gemma 4; no VM required.
 

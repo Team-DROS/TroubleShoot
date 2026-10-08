@@ -1,4 +1,4 @@
-# Shared protocol v1 — Member 3 integration surface
+# Shared protocol v1, Member 3 integration surface
 
 Member 3's branch now includes a loopback API, session coordinator, hosted Gemma
 transport and browser UI. The original foundation notes below describe the shared
@@ -18,11 +18,11 @@ allowlist, cookie authentication, token query parameters or public bind is used.
 | Method/path | Input/output |
 |---|---|
 | `GET /api/status` | Default provider, provider configuration/readiness/model/capabilities, executor and vision availability, simulation label |
-| `GET /api/targets` | `{targets:[{label,target}],available}`; bounded to 50 entries |
-| `POST /api/runs` | RunRequest fields plus optional `target`; returns 202 `{run_id,simulation}` |
-| `GET /api/runs/{id}` | `{run_id,state,recovery,cancel_requested}` |
+| `GET /api/targets` | `{targets:[{label, target}], available}`; bounded to 50 entries |
+| `POST /api/runs` | RunRequest fields plus optional `target`; returns 202 `{run_id, simulation}` |
+| `GET /api/runs/{id}` | `{run_id, state, recovery, cancel_requested}` |
 | `GET /api/runs/{id}/events` | SSE with event id/type/data; accepts `Last-Event-ID` cursor, ends after complete |
-| `POST /api/runs/{id}/decision` | Exactly `{token,action_id,approve}`; approve is a boolean |
+| `POST /api/runs/{id}/decision` | Exactly `{token, action_id, approve}`; approve is a boolean |
 | `POST /api/runs/{id}/cancel` | Empty JSON object; cooperative stop request and current recovery |
 
 JSON bodies are limited to 16 KiB. Unknown fields and missing consent fail with
@@ -131,7 +131,7 @@ identity, foreground/occlusion, coordinates, geometry/DPI, input freshness and
 cancellation immediately before input, with bounded native calls. A timeout in
 async Python alone cannot interrupt an independent native worker.
 
-Observation adds optional bounds `(left,top,right,bottom)` and positive DPI.
+Observation adds optional bounds `(left, top, right, bottom)` and positive DPI.
 The runtime compares new identity/geometry/DPI before execution. Coordinate
 validators and native foreground checks remain Member 1's responsibility.
 No UI screenshot/control metadata pipeline is implemented yet.
@@ -160,7 +160,7 @@ durable records after restart and verifies a machine marker before mutation.
 No operator recovery endpoint is implemented; pending records need human
 inspection. Do not use process restart or a different path to bypass recovery.
 
-`Check(name,expected,actual,passed,observed_at)` is created by a deterministic
+`Check(name, expected, actual, passed, observed_at)` is created by a deterministic
 verifier after execution. Its timestamp must be within the new verification
 interval. No checks/all failed means unresolved; mixed checks mean partial;
 all passed means resolved **only for the listed symptom checks**. A successful

@@ -9,7 +9,7 @@ is retained for history and superseded by this scope where it conflicts.
 
 ---
 
-# TroubleShoot — complete from-scratch project context
+# TroubleShoot, complete from-scratch project context
 
 Updated 8 October 2026, Asia/Calcutta. **Member 3 integration update: Member 2 `6ed184b` and Member 1 `3edf350` are merged into the authenticated API/session runtime. Local decision timeout defaults to 150 seconds; production run budget is 300 seconds. A persistent bounded PowerShell transport removes repeated startup without changing five-second freshness. CheckboxRecovery is wired for explicit programmatic verifier injection; production desktop changes stay disabled. Member 1's real Gemma/guest checkbox harness passed on a synthetic UI, while its vision run blocked and print probe lacked a printer. Authenticated API/UI guest execution and hosted inference remain pending. Member 3's unit/API/UI tests and actual native read-only smoke pass; this PC has no reachable local Gemma.** Read AGENTS.md, the rules snapshot, docs/PROVENANCE.md, docs/RESTART.md and your member assignment.
 
@@ -53,7 +53,7 @@ Ownership:
 - Member 3: `src/troubleshoot/api/`, `runtime/`, `providers/gemma_api.py`, `contracts.py`, API/hosted/contract tests, `web/`, `tests/e2e/web/`, Python packaging/config/lock, startup scripts and shared context/contract docs.
 - Member 4: README, CLAUDE.md, TEMPLATE_GUIDE, SUBMISSION_CHECKLIST, DEMO_SCRIPT, ATTRIBUTION and CONTRIBUTIONS. No runtime development or infrastructure setup.
 
-Keep Members 1–3's work substantial and Member 4 lighter (rough target 30/30/30/10; not claimed completed contributions). Member 3 owns shared schemas/integration and Python dependency changes; Member 2 owns the provider protocol and agrees it with Member 3; Member 1 provides executor interfaces. Changes across ownership boundaries are proposed and coordinated, not silently applied.
+Keep Members 1-3's work substantial and Member 4 lighter (rough target 30/30/30/10; not claimed completed contributions). Member 3 owns shared schemas/integration and Python dependency changes; Member 2 owns the provider protocol and agrees it with Member 3; Member 1 provides executor interfaces. Changes across ownership boundaries are proposed and coordinated, not silently applied.
 
 Member 3 develops with injected synthetic model/tool fixtures and, when credentials/account access exist, the hosted Gemma API. No local model or VM is needed for API/session/UI work. Production must never silently substitute test fixtures for a real provider. The shipped default stays local-first.
 
@@ -67,7 +67,7 @@ Use a small Python backend (FastAPI is an option), TypeScript/React UI if useful
 
 Thinker/actor/verifier are runtime roles with separate contexts using one model, not three loaded models or the four human members. Deterministic policy and measurable checks must constrain model output. Only shared contracts exist so far; runtime components remain to be implemented.
 
-## 5. Shared v1 contract — first subset implemented
+## 5. Shared v1 contract, first subset implemented
 
 Read docs/CONTRACTS.md and src/troubleshoot/contracts.py for the first implemented subset and synthetic fixture. Member 3 completes remaining schemas with Members 1/2; all three consume the shared contract. The following names are a proposed new API, not working endpoints or compatibility requirements:
 
@@ -128,7 +128,7 @@ Do not reuse a VM containing the previous app as demo evidence. Use clean OS/too
 
 ## 10. Validation and definition of done
 
-Fresh shared-contract unit tests exist; application build/runtime checks do not. Members 1–3 write new meaningful tests: malformed decisions, unknown operations, no cloud fallback, token replay/expiry, cancellation, model failure, unauthorized endpoints, stale/wrong window, coordinate bounds, malicious screenshot text and failed postconditions.
+Fresh shared-contract unit tests exist; application build/runtime checks do not. Members 1-3 write new meaningful tests: malformed decisions, unknown operations, no cloud fallback, token replay/expiry, cancellation, model failure, unauthorized endpoints, stale/wrong window, coordinate bounds, malicious screenshot text and failed postconditions.
 
 Fresh live evidence must record commit/time, OS, model/provider, VM snapshot, complaint, before facts, approval/action, after facts, restoration and limitations. Healthy diagnosis, one guest repair, a computer-use workflow and denial/cancellation are target evidence. Record blocked paths honestly. A fixture screenshot or recorded simulation is not a live repair.
 

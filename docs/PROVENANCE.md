@@ -1,9 +1,11 @@
-# Fresh repository provenance
+# Project provenance
 
-Created 8 October 2026. GitHub repository ID: `1409783973`, canonical name `Team-DROS/TroubleShoot`. Initial commit: `bdb891909586992b541d9b9e8cf50fe41e001d8d`.
+TroubleShoot was created on 8 October 2026 in `Team-DROS/TroubleShoot`.
 
-This is a newly created private repository with independent Git history. The team previously developed a Windows troubleshooting prototype in another checkout. The user reports organizers withdrew permission to reuse that implementation. This repository imports planning documents only; no earlier source, tests, prompts, dependency manifests, UI, demos, model output or Git commits are copied.
+The team previously developed a separate Windows troubleshooting prototype. Following user-reported organizer guidance, this repository was implemented independently from documented requirements. Planning documents were retained; earlier application source, tests, prompts, dependency manifests, UI, demos, model output and Git history were not imported.
 
-The new application will be written from the documented requirements using permitted third-party tools/models. Prior experience does not constitute a formal clean-room development process; do not claim the team had no prior prototype. All implementation commits and validation evidence here must reflect actual new work.
+The current implementation includes the Windows helper, Gemma providers, API, PWA console and product website. Prior team experience is disclosed; this is not a formal clean-room claim. Validation records distinguish real inference and native checks from synthetic fixtures.
 
-Models, installed runtimes, generic package caches and clean Windows VM infrastructure can be reused where event preparation rules permit. Application MIT licensing does not relicense model weights or Windows installation media. No public release or submission has been made.
+Third-party runtimes, package caches, model weights and clean VM infrastructure were environment preparation, not imported application code. The application's MIT license does not cover model weights or Windows installation media.
+
+The repository is public with the user's authorization. No accepted event submission is recorded here. See [validation](VALIDATION.md), [current setup](API_PWA.md) and [attribution](ATTRIBUTION.md).

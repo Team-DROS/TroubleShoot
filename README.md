@@ -2,7 +2,7 @@
 
 **A Windows troubleshooting assistant with hosted Gemma 4 reasoning and an installable PWA connected to a local Windows helper.**
 
-TroubleShoot lets you describe a Windows problem in plain English, watches the system gather real facts, asks Gemma to reason about them, and then—only after *you* approve—executes one bounded, registered action. It immediately re-checks whether the symptom actually changed, and tells you honestly whether it worked.
+TroubleShoot lets you describe a Windows problem in plain English, watches the system gather real facts, asks Gemma to reason about them, and then, only after *you* approve, executes one bounded, registered action. It immediately re-checks whether the symptom actually changed, and tells you honestly whether it worked.
 
 > Final integration update: all four members' fresh work is consolidated into main. Current production is **hosted Gemma API + Windows PWA**. 
 > Built in a single day at **Hacktoberfest Hack Day Coimbatore × INIT Club & Idea Club** on 8 October 2026 by Team DROS.
@@ -13,7 +13,7 @@ TroubleShoot lets you describe a Windows problem in plain English, watches the s
 
 Most Windows troubleshooting today is a loop: read a support page, run a command, guess whether it helped, repeat. Automated troubleshooters exist, but they offer little visibility into *what* they're doing or *why*.
 
-We wanted something different — a conversational assistant that shows you the evidence it collected, explains the reasoning behind a proposed fix, puts you in control of the decision, and then proves whether the outcome matched the expectation. Not "we ran something, trust us." Verified.
+We wanted something different, a conversational assistant that shows you the evidence it collected, explains the reasoning behind a proposed fix, puts you in control of the decision, and then proves whether the outcome matched the expectation. Not "we ran something, trust us." Verified.
 
 We don't claim TroubleShoot can fix every Windows problem. It targets a small, honest, demonstrable workflow first.
 
@@ -30,11 +30,11 @@ Gemma 4 reasons about them and proposes a specific, bounded action
    ↓
 You review and explicitly approve (or reject/cancel)
    ↓
-The approved action runs — nothing else
+The approved action runs, nothing else
    ↓
 Fresh postchecks verify whether the symptom changed
    ↓
-You see: Resolved / Partial / Unresolved — with the evidence
+You see: Resolved / Partial / Unresolved, with the evidence
 ```
 
 ---
@@ -63,9 +63,9 @@ You see: Resolved / Partial / Unresolved — with the evidence
 - Cloud text consent is explicit and per-run. Hosted Gemma API is the only production inference; no silent fallback is enabled.
 
 ### 🔬 Experimental: Local Gemma reasoning (Member 2)
-Real inference on `gemma4:e2b` via Ollama — 7 recorded evidence runs on 8 October 2026 (outside the enabled live flow).
+Real inference on `gemma4:e2b` via Ollama, 7 recorded evidence runs on 8 October 2026 (outside the enabled live flow).
 - **6/6 simulated scenarios passed** (spooler repair, DNS repair, diagnose-only, injected-text safety, unresolved symptom, out-of-scope decline).
-- **Decisions on real guest facts** from Member 1's Windows 11 guest — `start_spooler`, `system_snapshot`, `spooler_status` chosen correctly.
+- **Decisions on real guest facts** from Member 1's Windows 11 guest, `start_spooler`, `system_snapshot`, `spooler_status` chosen correctly.
 - **Vision pass**: Gemma correctly read "Print Spooler is listed as Stopped" from a screenshot and proposed a restart. Injected "ignore previous instructions" banner produced no change.
 
 ### 🔬 Experimental: Windows desktop executor (Member 1)
@@ -83,10 +83,10 @@ Newly authored PowerShell + Python executor running inside a Windows 11 guest VM
 | Item | Status |
 |---|---|
 | Full hosted guest repair (API → executor path) | ⏳ Integration in progress |
-| Browser-automated PWA install verification | ⏳ Blocked — browser automation failed to initialize |
+| Browser-automated PWA install verification | ⏳ Blocked, browser automation failed to initialize |
 | Hosted Gemma vision | ⏳ Disabled in this prototype |
 | Real print success (not just Spooler Running) | ⏳ Requires physical printer in guest |
-| Demo video | ⏳ Not recorded — see [DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) |
+| Demo video | ⏳ Not recorded, see [DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) |
 
 Spooler Running proves service state only, not a successful print job. We say so explicitly.
 
@@ -234,7 +234,7 @@ No old prototype results are carried over. Tests are not live repair evidence.
 
 **Honest about limits.** Spooler Running ≠ successful print. Unknown vision result ≠ execution blocked. We say these things in the UI and in these docs.
 
-**No silent fallback.** If local Ollama isn't running, you get an error — not a quiet switch to the hosted API. If hosted inference times out, you get a timeout — not a cached guess.
+**No silent fallback.** If local Ollama isn't running, you get an error, not a quiet switch to the hosted API. If hosted inference times out, you get a timeout, not a cached guess.
 
 **5-second observation window.** The action you approve must match the *exact* window that was inspected, within 5 seconds. Replaced processes, moved windows and stale coordinates are all rejected before any input happens.
 
@@ -242,7 +242,7 @@ No old prototype results are carried over. Tests are not live repair evidence.
 
 ## Challenges and what we learned
 
-- Splitting a same-day build across four people with different hardware (VM + Gemma, Gemma-only, no local model at all) required very clear interface contracts up front. The shared `contracts.py` module was the right call — it let everyone develop independently against the same shape.
+- Splitting a same-day build across four people with different hardware (VM + Gemma, Gemma-only, no local model at all) required very clear interface contracts up front. The shared `contracts.py` module was the right call, it let everyone develop independently against the same shape.
 - Gemma's reasoning quality on CPU-only hardware is good but slow (~43 s/decision). On a GPU or the team's Windows PC (~21 s) it's much more usable.
 - "Execution returned OK" and "the symptom is resolved" are completely different things. Building the verification layer made this obvious in a way that reading about it doesn't.
 - The observation freshness window (5 seconds) feels aggressive, but it's the right default. Window replacement during a troubleshooting session is a real threat, not a theoretical one.
@@ -276,5 +276,5 @@ Documentation structure informed by the [user-supplied hackathon template](https
 
 See [docs/PROVENANCE.md](docs/PROVENANCE.md) for full repository history and fresh-build disclosure.
 
-**License: MIT** — see [LICENSE](LICENSE).
+**License: MIT**, see [LICENSE](LICENSE).
 Model weights and Windows installation media retain their own license terms.
