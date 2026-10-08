@@ -1,6 +1,6 @@
 # Hacktoberfest Hack Day Coimbatore, team and agent rulebook
 
-> Team update, 8 October 2026: the user now reports that organizers withdrew permission to reuse the earlier prototype. Start implementation from scratch. Earlier approval statements are superseded. This is user-reported organizer guidance; the dated snapshot below remains for reference. See docs/PROVENANCE.md and docs/RESTART.md.
+> Team update, 8 October 2026: the user now reports that organizers withdrew permission to reuse the earlier prototype. Start implementation from scratch. Earlier approval statements are superseded. This is user-reported organizer guidance; the dated snapshot below remains for reference. See docs/RESTART.md.
 
 Verified: **8 October 2026, approximately 08:20 IST (Asia/Kolkata, UTC+05:30)**.
 
