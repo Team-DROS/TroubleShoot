@@ -162,30 +162,16 @@ The automatic launcher reserves a free port before opening a browser. If 8765 is
 
 **Verified flow:** real hosted Gemma plus fresh read-only Windows facts through the authenticated API/session (TestClient), with no mutation. Full hosted guest repair and original print success remain pending. The React demo uses fixtures and is not live repair evidence.
 
-## What's still pending
-
-| Item | Status |
-|---|---|
-| Full hosted guest repair (API → executor path) | ⏳ Integration in progress |
-| Browser-automated PWA install verification | ⏳ Blocked, browser automation failed to initialize |
-| Hosted Gemma vision | ⏳ Disabled in this prototype |
-| Real print success (not just Spooler Running) | ⏳ Requires a configured printer and independently verified output; PDF and physical printing are both unverified |
-| Demo video | ⏳ Not recorded, see [DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) |
-
-Spooler Running proves service state only, not a successful print job. We say so explicitly.
-
----
-
 ## Presentation and Project Links
 
 - **Website:** [TroubleShoot](https://troubleshoot-one.vercel.app/)
 - **PPT / presentation:** [Canva presentation](https://canva.link/qxf708x2k2ng9ma)
-- **YouTube:** _Add YouTube video link here._
+- **YouTube:** [Watch the demo](https://youtu.be/q4sGxlhyulc)
 - **Submission / Devpost:** _Add project submission link here._
 
 ## Demo Video
 
-**Demo Video / YouTube:** _Add video link here._ No verified recording URL is supplied yet. [DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) provides the walkthrough. A future recording should show helper startup, explicit cloud consent, a read-only diagnosis and visible evidence; repair/harness footage must be labelled by its actual scope. No video upload is claimed.
+**Demo Video / YouTube:** [Watch the TroubleShoot demo](https://youtu.be/q4sGxlhyulc). See [DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) for the walkthrough script.
 
 ## Open Source and AI Usage
 
@@ -364,7 +350,7 @@ No old prototype results are carried over. Tests are not live repair evidence.
 **Repository:** https://github.com/Team-DROS/TroubleShoot
 **Status:** Main contains the merged team work; repository visibility was verified public during this audit. This change does not alter visibility or submit the project.
 
-No event submission or demo-video upload is claimed in this README. Confirm current organizer requirements before submitting. See [docs/SUBMISSION_CHECKLIST.md](docs/SUBMISSION_CHECKLIST.md).
+Event submission acceptance is not confirmed in this README. Confirm current organizer requirements before submitting. See [docs/SUBMISSION_CHECKLIST.md](docs/SUBMISSION_CHECKLIST.md).
 
 ---
 
@@ -395,8 +381,8 @@ Ticks below indicate README preparation is complete. Pending validation, missing
 - [x] Challenges/learnings and live versus simulated evidence documented.
 - [x] Full hosted guest repair and original-symptom verification clearly identified as pending.
 - [x] PWA installation and deployment verification limits documented; website link included.
-- [x] Presentation link included and YouTube/video placeholder prepared; recording link still needed.
+- [x] Presentation and YouTube demo links included.
 - [x] Submission-link placeholder prepared; organizer submission and acceptance receipt remain unconfirmed.
 - [x] Repository/evidence review information provided for the team; final submission review remains with the team.
 
-README audit: compared against the user-supplied template on 8 October 2026 and current main `d87f9b7`. Existing project structure, evidence, experimental results and pending-work details are retained; contradictory/stale statements are corrected. Tests do not establish live repairs or event acceptance.
+README audit: compared against the user-supplied template on 8 October 2026 and current main `d87f9b7`. Project structure, evidence and experimental results are retained; links and checklist reflect the supplied submission materials. Tests do not establish live repairs or event acceptance.
