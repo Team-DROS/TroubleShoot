@@ -29,3 +29,9 @@ Fresh Spooler `Running` proves service state only; actual printing needs a separ
 Checkbox postchecks prove selected control state only. A close request succeeds only when the selected window is gone and no visible windows remain for its PID; save dialogs count as incomplete. Desktop cancellation/timeout may follow an input: return uncertainty and reobserve. Automatic reopening or rollback of arbitrary checkbox semantics is not implemented; enable only a scenario with a documented human recovery before an end-user repair workflow ships.
 
 `scripts/vm/build-fixture.ps1` builds a fresh synthetic checkbox/save-dialog application. It tests controller behavior, not real troubleshooting. VM validation and actual provider-driven reasoning remain separate evidence gates.
+
+## Conditional desktop recovery
+
+`CheckboxRecovery(executor, recovery_directory).apply(snapshot, arguments, context)` wraps only the selected checkbox workflow and retains a durable baseline. `restore(recovery_id, new_context)` requires a fresh matching target/control and a new approval unless already restored. See `RECOVERY.md`; Member 3 must integrate session serialization/private state/startup inspection and original-symptom verification before enabling this path for users. Generic mouse/close operations do not gain semantic recovery automatically.
+
+Real Member 2 provider integration was exercised from its own source revision `41b1c9b` with host-local Ollama on `127.0.0.1:11435`; native execution remained in the Windows guest. Text→human approval→native checkbox action→fixture verification→restoration passed through a developer harness. This does not prove API/session authorization. Live capture→Gemma vision returned unknown and safely blocked execution. Print probe blocked because no printer is installed. See the four new sanitized Gemma/print JSON reports and VALIDATION.md; do not promote these to real print or general vision success.
