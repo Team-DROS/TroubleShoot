@@ -84,12 +84,20 @@ class Observation:
     observation_id: str
     observed_at: str
     target: Target
+    bounds: tuple[int, int, int, int] | None = None
+    dpi: int | None = None
 
     def __post_init__(self):
         text(self.observation_id, "observation_id", 128)
         timestamp(self.observed_at)
         if not isinstance(self.target, Target):
             raise ContractError("Invalid observation target")
+        if self.bounds is not None:
+            if (len(self.bounds) != 4 or any(type(x) is not int for x in self.bounds)
+                    or self.bounds[2] <= self.bounds[0] or self.bounds[3] <= self.bounds[1]):
+                raise ContractError("Invalid observation bounds")
+        if self.dpi is not None:
+            positive_integer(self.dpi, "dpi")
 
     def require_fresh(self, now: datetime, max_age_seconds: float = 5):
         if (now.utcoffset() is None or type(max_age_seconds) not in (int, float)
@@ -147,3 +155,46 @@ def event(event_id: str, kind: str, payload: dict) -> dict:
         raise ContractError("Event payload must be an object")
     return {"id": event_id, "type": kind,
             "timestamp": datetime.now(timezone.utc).isoformat(), "payload": payload}
+
+
+@dataclass(frozen=True)
+class Check:
+    """Fresh deterministic symptom check; model text is never a check."""
+
+    name: str
+    expected: str
+    actual: str
+    passed: bool
+    observed_at: str
+
+    def __post_init__(self):
+        for key in ("name", "expected", "actual"):
+            text(getattr(self, key), key)
+        if type(self.passed) is not bool:
+            raise ContractError("Check passed must be boolean")
+        timestamp(self.observed_at)
+
+
+@dataclass(frozen=True)
+class ExecutionResult:
+    status: str
+    recovery: str = "none"
+
+    def __post_init__(self):
+        if self.status not in {"ok", "blocked", "failed", "cancelled"}:
+            raise ContractError("Invalid execution status")
+        if self.recovery not in {"none", "pending", "restored", "failed"}:
+            raise ContractError("Invalid recovery state")
+
+
+def parse_decision(payload: Any, registry: Mapping[str, ArgumentValidator]) -> dict:
+    fields(payload, {"summary", "action"})
+    summary = text(payload["summary"], "summary")
+    action = None if payload["action"] is None else parse_action(payload["action"], registry).to_dict()
+    return {"summary": summary, "action": action}
+
+
+def verdict(checks: list[Check]) -> str:
+    if not checks or not any(check.passed for check in checks):
+        return "unresolved"
+    return "resolved" if all(check.passed for check in checks) else "partial"
