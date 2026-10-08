@@ -109,6 +109,7 @@ class _RunState:
         self.vision = vision
         self.history: list[dict] = []
         self.seen: set[str] = set()
+        self.used: dict[str, list[dict]] = {}
         self.mutations = 0
         self.outcome = Outcome("error", "", mode)
         self.run_status: list[str] = []
@@ -127,6 +128,7 @@ class _RunState:
     def loop(self) -> Outcome:
         invalid = 0
         for step in range(1, self.budget.max_steps + 1):
+            self.step = step
             if self.hooks.cancelled():
                 return self.finish("cancelled", "Stopped by the user.")
             if self.o.clock() - self.started > self.budget.max_seconds:
@@ -191,16 +193,24 @@ class _RunState:
         images = ()
         if self.vision and fresh.image is not None:
             images = (fresh.image,)
+        last_step = step == self.budget.max_steps
+        status = list(self.run_status)
+        if self.used:
+            done = "; ".join(f"{op} {json.dumps(args)}" for op, calls in self.used.items() for args in calls)
+            status.append(f"Already ran (results in HISTORY, do not repeat): {done}")
+        if last_step and not self.conclude_only:
+            status.append("This is the last step: conclude with what the evidence shows.")
         prompt = build_user_prompt(self.complaint, self.mode, self.o.catalog, fresh.facts, self.history,
                                    self.budget.max_steps - step + 1, image_attached=bool(images),
-                                   run_status=self.run_status, allow_mutation=self.allow_mutation)
-        schema = decision_schema(self.o.catalog, self.mode, self.allow_mutation, self.conclude_only)
+                                   run_status=status, allow_mutation=self.allow_mutation)
+        schema = decision_schema(self.o.catalog, self.mode, self.allow_mutation,
+                                 self.conclude_only or last_step, self.used)
         return ModelRequest(SYSTEM, prompt, schema, images,
                             self.budget.max_output_tokens, self.budget.step_timeout)
 
     def _accept(self, data) -> Decision:
         decision = parse_decision(data, self.o.catalog, self.mode)
-        if self.conclude_only and decision.next != "conclude":
+        if (self.conclude_only or self.step == self.budget.max_steps) and decision.next != "conclude":
             raise DecisionError("The change is verified; conclude and explain the result")
         if decision.next != "run_tool":
             return decision
@@ -250,6 +260,7 @@ class _RunState:
     def _act(self, step: int, decision: Decision, proposal: ActionProposal) -> Outcome | None:
         tool = self.o.catalog.get(decision.operation)
         self.seen.add(decision.operation + json.dumps(decision.arguments, sort_keys=True))
+        self.used.setdefault(decision.operation, []).append(proposal.arguments)
         approved = self.hooks.authorize(proposal, tool)
         self.emit("approval", {"action_id": proposal.action_id, "operation": proposal.operation,
                                "mutates": tool.mutates, "approved": bool(approved)})

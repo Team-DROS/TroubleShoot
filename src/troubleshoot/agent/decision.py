@@ -56,24 +56,56 @@ def _nullable(schema):
     return {"anyOf": [schema, {"type": "null"}]}
 
 
+def _unused_arguments(arguments: dict, used: list[dict]) -> dict | None:
+    """Narrow an argument schema so calls already made cannot be emitted again.
+
+    Handles the two shapes small tool schemas use: no arguments (drop the tool
+    once used) and one enum-valued argument (drop used values). Other shapes are
+    left alone; repeated calls are still rejected by the coordinator.
+    """
+    if not used:
+        return arguments
+    props = arguments.get("properties", {})
+    if not props:
+        return None
+    if len(props) == 1:
+        (key, prop), = props.items()
+        if isinstance(prop.get("enum"), list):
+            remaining = [v for v in prop["enum"] if v not in {u.get(key) for u in used}]
+            if not remaining:
+                return None
+            return {**arguments, "properties": {key: {**prop, "enum": remaining}}}
+    return arguments
+
+
 def decision_schema(catalog: Catalog, mode: str, allow_mutation: bool = True,
-                    conclude_only: bool = False) -> dict:
+                    conclude_only: bool = False, used: dict[str, list[dict]] | None = None) -> dict:
     """JSON schema passed to the runtime for constrained decoding.
 
     Each available tool becomes its own branch, so the operation name and its
     argument shape are tied together and unknown operations cannot be emitted.
-    After the change budget is used, mutating tools disappear; after a verified
-    fix, only `conclude` remains.
+    Calls already made are pruned; after the change budget is used, mutating
+    tools disappear; after a verified fix or on the last step only `conclude`
+    remains.
     """
+    used = used or {}
     tools = [] if conclude_only else [t for t in catalog.available(mode) if allow_mutation or not t.mutates]
-    branches = [{
-        "type": "object",
-        "properties": {"operation": {"type": "string", "enum": [tool.name]},
-                       "arguments": tool.arguments, "reason": _string(160)},
-        "required": ["operation", "arguments", "reason"],
-        "additionalProperties": False,
-    } for tool in tools]
+    branches = []
+    for tool in tools:
+        arguments = _unused_arguments(tool.arguments, used.get(tool.name, []))
+        if arguments is None:
+            continue
+        branches.append({
+            "type": "object",
+            "properties": {"operation": {"type": "string", "enum": [tool.name]},
+                           "arguments": arguments, "reason": _string(160)},
+            "required": ["operation", "arguments", "reason"],
+            "additionalProperties": False,
+        })
+    conclude_only = conclude_only or not branches
     steps = ["conclude"] if conclude_only else list(NEXT_STEPS)
+    if conclude_only:
+        branches = []
     return {
         "type": "object",
         "properties": {
