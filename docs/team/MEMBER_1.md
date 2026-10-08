@@ -1,32 +1,33 @@
-# Member 1 — Gemma backend and integration
+# Member 1 — Windows tools, computer use and VM validation
 
-**Branch:** `member-1/gemma-orchestrator`. **Resources/workload:** Gemma PC A; approximately 30% workload.
+**Branch:** `member-1/windows-desktop-vm`. **Hardware/workload:** Local Gemma 4 + Windows VM; substantial technical role.
 
-Read AGENTS.md, PROJECT_CONTEXT.md, docs/RESTART.md, HACKATHON_AGENT_RULES.md and docs/PROVENANCE.md first. Update your assigned branch with `git fetch origin`, `git switch <your-branch>` and `git pull --ff-only`; preserve local work if not clean. Do not reset/overwrite teammates' changes.
+Read AGENTS.md, PROJECT_CONTEXT.md, docs/CONTRACTS.md and HACKATHON_AGENT_RULES.md first. Preserve local changes before updating your branch. Existing shared-contract code and synthetic fixtures are newly authored and may be used; the earlier standalone prototype must not be copied or restored.
 
-**No application code exists. Author a new implementation from these requirements. Do not copy/port/read the removed prototype as a template, restore old tests/config, or reuse old results.** Use official library documentation and new synthetic fixtures. Read docs/CONTRACTS.md: the initial shared contract module and synthetic fixtures are provided. Other runtime paths are your fresh implementation deliverables.
-
+No running model adapter, API, UI or Windows executor exists yet. Every runtime feature below is work to implement and validate. Keep the repository private until explicit user instruction.
 ## Ownership
 
-Own `src/troubleshoot/api/`, `agent/`, `providers/`, `contracts.py`, Python project/dependency configuration, backend startup scripts, provider/agent/API tests and shared context. Coordinate integration; do not write Member 2's executor or Member 3's UI for them.
+Own `src/troubleshoot/windows/`, `src/troubleshoot/desktop/`, `tests/unit/test_windows*`, `tests/unit/test_desktop*`, `tests/e2e/windows/`, `scripts/vm/`, `docs/VM_STATUS.md`, `docs/VALIDATION.md` and sanitized `docs/evidence/windows/`. Member 2 owns model reasoning/local provider; Member 3 owns API/runtime/shared schemas and packaging.
 
-## Ordered implementation
+## Ordered work
 
-1. Create minimal Python package/build/test configuration from scratch. Select dependencies for actual needs; generate a fresh lock. Establish new shared schemas from PROJECT_CONTEXT section 5, plus synthetic event/action fixtures. Commit this small contract first to unblock the team.
-2. Implement a local Ollama Gemma adapter with explicit capability/configuration checks, bounded requests and validated structured output. Confirm a real installed model response; do not count mock responses as inference.
-3. Implement a coordinator/session state machine and loopback API for diagnosis, bounded plan, approval, cancellation, fresh verification and recovery. Match agreed contracts, protect sensitive endpoints with session authorization and origin checks, and keep model output separate from execution authority.
-4. Integrate Member 2's exported registry/observation/execution helpers and Member 3's UI. First prove one read-only workflow; then one approved repair with independent postchecks. Set/document step/time budgets.
-5. Add a hosted Gemma adapter using current official docs and actual account access. Explicit local/hosted choice, no fallback, backend-only key and separate prompt/image consent. Fail clearly on missing key/model/quota.
-6. Publish working setup/run/test commands only after running them. Coordinate small reviewed PRs; final integrated verification includes all newly written tests and guest evidence from Member 3.
+1. Verify a clean Windows guest and resource/snapshot readiness. Reuse OS/tools/model infrastructure where permitted; install newly authored project code only. Do not copy the old application or its guest test results. Preserve disk space; no duplicate ISO/VDI/model download without a demonstrated need.
+2. Build registered fixed Windows diagnostics with strict per-operation argument validation, timeouts and structured evidence. Export validators for `parse_action` and explicit executors; no model-generated shell text.
+3. Build selected-window identity, accessibility inspection and consented capture. Include handle/PID/process-start time, fresh observation ID, geometry/DPI and foreground/visibility state. Coordinate observation schema additions with Member 3.
+4. Implement one bounded desktop action at a time. Recheck identity/freshness/geometry immediately before input. Reject stale/replaced/out-of-bounds/protected targets, terminals/Run dialog, secret fields and UAC prompts. Prefer accessibility controls and keep UAC human-driven.
+5. Work with Member 2 to connect actual Gemma image reasoning to your observations/actions and Member 3 to connect approvals/UI. Define one genuine reversible troubleshooting scenario, its postcondition and recovery before attempting it.
+6. Validate inside the guest: healthy diagnosis, one approved repair, denial/cancellation, a computer-use workflow and a failed/partial outcome. Record actual revision/time/model/provider/snapshot, pre-state, action/approval, fresh checks and restoration. Do not fault host adapters or replace live evidence with footage from the old project.
 
-## Tests and completion
+## Acceptance and tests
 
-Create new tests for malformed/extra/unknown decisions, model timeout/unavailability, cloud fallback prohibition, consent, unauthorized API calls, single-use bound approval, cancellation/recovery and false verifier success. Fresh local model smoke evidence is required; hosted evidence is separate and may remain blocked honestly.
+Create new executor tests for wrong/reused identity, stale or future observation, DPI/geometry changes, foreground loss, extra args/unknown actions, malicious UI text, denied approval, cancellation and action success without symptom change. A running Spooler proves service recovery only; fixture GUI control proves controller behavior only.
 
-Give Members 2/3 committed schema names, sample payloads, error types and executor/provider signatures early. Own dependency changes requested by Member 2. Report what is implemented versus mocked/live-tested. No inherited compatibility layer or old backend refactor is needed.
+Local Gemma on your host is useful for joint tests, but the Windows guest does not inherit host CUDA or host loopback. Agree a scoped inference arrangement with Members 2/3. A network fault may sever hosted/host inference: use a scenario preserving it or a documented recovery design. Report resource/recovery blockers honestly.
+
+## Handoffs
+
+Give Member 2 the operation registry, observations and postcheck evidence. Give Member 3 exact callable signatures, required privileges/dependencies, target metadata and recovery behavior. Member 3 applies Python packaging changes. Give Member 4 only sanitized fresh results and genuine demo steps.
 
 ## Prompt for your AI agent
 
-“Read the shared fresh-build instructions and MEMBER_1.md. Work on member-1/gemma-orchestrator in owned paths only. The earlier prototype reuse permission has been withdrawn; author new code/docs from requirements, never copy or restore old implementation. Coordinate shared contracts, preserve private visibility and report fresh evidence honestly.”
-
-Initial package and contract tests have been started. Finish the remaining typed schemas and proceed to the local Gemma adapter; preserve the new contract boundary and coordinate any changes.
+“Read AGENTS.md, PROJECT_CONTEXT.md, docs/CONTRACTS.md and MEMBER_1.md. Work on member-1/windows-desktop-vm in my owned paths. Follow the revised hardware split; author fresh implementation/docs, coordinate with Member 3 on API/contracts and Member 2 on provider protocol. Keep the project local-first, preserve bounded Windows/computer-use and fresh verification, keep repository private and report actual evidence.”

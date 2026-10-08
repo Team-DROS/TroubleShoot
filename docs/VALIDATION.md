@@ -8,4 +8,4 @@
 
 Tests use the installed Python runtime and standard library, with no model/dependency/VM duplication. No runnable UI/API or hosted adapter exists yet.
 
-Member 3 will append actual runtime/guest evidence with revision/time, OS/model/provider, scenario, before facts, approval/action, fresh postchecks, recovery and limitations.
+Member 1 owns this report and appends actual guest/native evidence, with local-model evidence from Member 2 and API/hosted/UI evidence from Member 3 with revision/time, OS/model/provider, scenario, before facts, approval/action, fresh postchecks, recovery and limitations.

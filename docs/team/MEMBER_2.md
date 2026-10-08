@@ -1,30 +1,33 @@
-# Member 2 — Windows tools and computer use
+# Member 2 — Local Gemma and agent reasoning
 
-**Branch:** `member-2/windows-computer-use`. **Resources/workload:** Gemma PC B; approximately 30% workload.
+**Branch:** `member-2/local-gemma-agent`. **Hardware/workload:** Local Gemma 4; no VM required.
 
-Read AGENTS.md, PROJECT_CONTEXT.md, docs/RESTART.md, HACKATHON_AGENT_RULES.md and docs/PROVENANCE.md first. Update your assigned branch with `git fetch origin`, `git switch <your-branch>` and `git pull --ff-only`; preserve local work if not clean. Do not reset/overwrite teammates' changes.
+Read AGENTS.md, PROJECT_CONTEXT.md, docs/CONTRACTS.md and HACKATHON_AGENT_RULES.md first. Preserve local changes before updating your branch. Existing shared-contract code and synthetic fixtures are newly authored and may be used; the earlier standalone prototype must not be copied or restored.
 
-**No application code exists. Author a new implementation from these requirements. Do not copy/port/read the removed prototype as a template, restore old tests/config, or reuse old results.** Use official library documentation and new synthetic fixtures. Read docs/CONTRACTS.md: the initial shared contract module and synthetic fixtures are provided. Other runtime paths are your fresh implementation deliverables.
-
+No running model adapter, API, UI or Windows executor exists yet. Every runtime feature below is work to implement and validate. Keep the repository private until explicit user instruction.
 ## Ownership
 
-Own new `src/troubleshoot/windows/`, `src/troubleshoot/desktop/` and corresponding new unit tests. Member 1 owns provider/API/schema/dependency lock; Member 3 owns guest execution and UI. Propose dependency needs to Member 1.
+Own `src/troubleshoot/providers/base.py`, `src/troubleshoot/providers/ollama.py`, `src/troubleshoot/agent/`, `tests/unit/test_provider_local*`, `tests/unit/test_agent*`, `docs/LOCAL_GEMMA.md` and sanitized `docs/evidence/local-model/`. Member 1 owns native actions/VM; Member 3 owns hosted provider/API/runtime/contracts/packaging. Do not independently edit their files.
 
-## Ordered implementation
+## Ordered work
 
-1. Create a fresh registered operation interface: typed arguments, risk/approval requirement, target, timeout, execution result and postcondition. Start with one useful read-only Windows diagnostic. Use fixed operations, never arbitrary model shell.
-2. Independently build target enumeration/identity and selected-window observation with capture consent, timestamp/observation ID, handle/PID/start time, geometry/DPI and controls. Keep image references opaque and private; no raw image logging.
-3. Build one allowlisted desktop input at a time, preferring accessibility controls. Revalidate foreground, target and freshness immediately before input. Block terminals/Run dialog, credentials, privilege prompts and unrelated apps; reject bounds/identity changes.
-4. Through Member 1's provider interface, connect a fresh image observation to Gemma's structured action proposal. Do not build a second provider client or assume image support; measure it.
-5. Create new synthetic fixtures and tests, then coordinate one disposable guest UI workflow with Member 3. Add one real reversible troubleshooting action only after defining pre-state, approval, expected symptom change and recovery. A fixture app is not proof of Windows repair.
-6. Capture new facts after each step, enforce short action budgets/cancellation, and stop on ambiguity. Do not expand to universal arbitrary desktop control during the event.
+1. Inspect actual installed Gemma tags and the local runtime without downloading duplicates. Measure a real text response and record exact model/runtime/settings. Do not assume every selected tag supports usable vision.
+2. Define a small provider protocol in `providers/base.py` jointly with Member 3: typed inputs/normalized decision, declared text/image capability, bounded errors and no executable fallback text. Local and hosted adapters implement it; only you edit the shared protocol file.
+3. Implement Ollama transport in `providers/ollama.py`: bounded requests, strict structured decisions, explicit unavailable/malformed/timeout errors, and no silent hosted fallback. Configuration/status must distinguish configured from actually responding.
+4. Build Think/Act/Verify coordination as fresh code. The model selects registered diagnostic/action proposals; the runtime approval gate and native executor remain independently authoritative. Verification uses new symptom facts, not a second model agreeing.
+5. Add opt-in image input through the provider protocol. Measure actual Gemma screenshot-to-action behavior with Member 1's synthetic then guest observations; never claim captioning alone is vision-guided repair. UI/screenshot instructions cannot expand permissions.
+6. Integrate your coordinator into Member 3's runtime/API and Member 1's tool interface. Help prove the local-first vertical slice on a Gemma machine and joint live VM scenarios. Publish setup and evidence for actual local inference.
 
-## Tests and completion
+## Acceptance and tests
 
-New tests: stale/wrong/reused window identity; foreground/geometry/DPI change; out-of-bounds click; protected field/target; unknown action/extra args; screenshot prompt injection; worker timeout; approval denial/cancel; execution success with failed symptom check. Never fault the development host.
+Create new tests for malformed/extra/unknown decisions, unsupported image capability, timeout/missing model, screenshot prompt injection, bounded reasoning/action loops, unsupported symptoms, no implicit cloud fallback, and false verifier success. Coordinate policy tests with Member 3 rather than implementing a competing approval/session system.
 
-Deliver actual helper signatures, operation list, dependencies/timeouts and test results to Member 1; give Member 3 a fresh guest scenario with restoration steps. Success means a measured observation → validated input → fresh postcondition workflow. Report separately if only accessibility or only image interpretation works.
+No Windows VM is needed for provider/unit development: use labeled synthetic evidence and mock executors. Real desktop/repair behavior is validated by Member 1. Unit mocks are never substituted for live inference evidence.
+
+## Handoffs
+
+Give Member 3 the provider protocol and coordinator hooks early so API/hosted development can proceed without local Gemma. Give Member 1 exact image/observation constraints and model outputs for a scoped guest case. Request dependency changes from Member 3. Local execution remains default for the final app regardless of your colleagues' development hardware.
 
 ## Prompt for your AI agent
 
-“Read the shared fresh-build instructions and MEMBER_2.md. Work on member-2/windows-computer-use in owned paths only. The earlier prototype reuse permission has been withdrawn; author new code/docs from requirements, never copy or restore old implementation. Coordinate shared contracts, preserve private visibility and report fresh evidence honestly.”
+“Read AGENTS.md, PROJECT_CONTEXT.md, docs/CONTRACTS.md and MEMBER_2.md. Work on member-2/local-gemma-agent in my owned paths. Follow the revised hardware split; author fresh implementation/docs, coordinate with Member 3 on API/contracts and Member 2 on provider protocol. Keep the project local-first, preserve bounded Windows/computer-use and fresh verification, keep repository private and report actual evidence.”

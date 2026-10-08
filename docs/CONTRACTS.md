@@ -2,9 +2,10 @@
 
 Implemented module: `src/troubleshoot/contracts.py`. This is a validation foundation; it provides no model client, Windows executor, API server, UI or repair behavior.
 
-- Member 1: use `RunRequest` for normalized provider/consent policy. `parse_action(payload, registry)` requires the concrete executor registry's argument validator and rejects unregistered operations and extra proposal fields.
-- Member 2: export a registry mapping operation names to strict argument validators. Each validator returns a validated argument object or raises `ContractError`. Windows execution must independently enforce approval, mode, geometry/foreground, target identity and freshness immediately before acting; parsing is not authorization.
-- Member 3: use the synthetic fixture below to develop observation/action presentation. Events have `id`, `type`, `timestamp` and `payload`. No endpoint is live yet; field `type` uses observation/plan/approval/action/verification/complete/error.
+- Member 3 owns shared contracts/API/session consent and hosted transport; `RunRequest` is the initial request policy. `parse_action(payload, registry)` requires executor argument validators and rejects unregistered operations/extra proposal fields.
+- Member 1 owns the registry of operation names to strict validators and the Windows/desktop executor. Each validator returns a validated object or raises `ContractError`. Execution rechecks approval/mode/geometry/foreground/identity/freshness independently; parsing is not authorization.
+- Member 2 owns provider protocol, local Ollama transport and agent decisions. Consume these schemas and propose additions to Member 3 rather than making competing shapes.
+- Member 3 also owns the minimal UI. Synthetic events have `id`, `type`, `timestamp`, `payload`; types are observation/plan/approval/action/verification/complete/error. No endpoint is live yet.
 
 `Target` identity is handle/PID/process start timestamp. `Observation` binds it to an ID and timezone-aware capture time; default permitted age is five seconds. `require_target` checks identity, observation ID and age. Geometry/DPI/control metadata, authenticated image references, approval tokens, budgets and verdict schemas are next work, not implemented protection.
 
@@ -19,4 +20,4 @@ $env:PYTHONPATH = Join-Path (Get-Location) 'src'
 python -m unittest discover -s tests/unit -v
 ```
 
-These checks validate trust boundaries in the contracts, not model performance or Windows behavior. Person 1 supplies follow-up typed schemas and API samples before Members 2/3 wire their components.
+These checks validate trust boundaries in the contracts, not model performance or Windows behavior. Member 3 supplies follow-up API schemas/samples, Member 2 supplies provider protocol, and Member 1 supplies executor hooks before runtime integration.

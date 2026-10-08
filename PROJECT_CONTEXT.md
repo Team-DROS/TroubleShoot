@@ -18,16 +18,29 @@ Windows already has some automatic troubleshooters. Our intended contribution is
 
 First vertical slice: real local Gemma diagnosis, one safe approved Windows action with measured postcondition, clear denial/cancel behavior and a truthful UI. Next: bounded screenshot/desktop interaction and explicit hosted Gemma support. Choose the first actual repair scenario together based on the clean VM's capabilities. Spooler service recovery, for example, only demonstrates service recovery, not a physical printed page. A disposable UI fixture proves controller behavior, not real Windows troubleshooting.
 
-## 3. Team split and file ownership — all paths are to be created
+## 3. Revised hardware split and file ownership
 
-| Member | Hardware | Branch | Owned planned paths | Deliverable |
-|---|---|---|---|---|
-| 1 | Gemma PC A | `member-1/gemma-orchestrator` | `src/troubleshoot/api/`, `src/troubleshoot/agent/`, `src/troubleshoot/providers/`, `src/troubleshoot/contracts.py`, Python packaging/config, `tests/unit/test_provider*`, `tests/unit/test_agent*`, `tests/api/`, `scripts/start*` | New backend, provider adapters, coordinator and integration |
-| 2 | Gemma PC B | `member-2/windows-computer-use` | `src/troubleshoot/windows/`, `src/troubleshoot/desktop/`, `tests/unit/test_windows*`, `tests/unit/test_desktop*` | New registered Windows tools and selected-window executor |
-| 3 | VirtualBox | `member-3/ui-vm-validation` | `web/`, `tests/e2e/`, `docs/VM_STATUS.md`, `docs/VALIDATION.md`, sanitized `docs/evidence/` | New minimal UI and real guest validation |
-| 4 | No model/VM needed | `member-4/docs-demo-submission` | README, `docs/SUBMISSION_CHECKLIST.md`, new `docs/DEMO_SCRIPT.md`, `docs/ATTRIBUTION.md`, `docs/CONTRIBUTIONS.md` | Lighter documentation/demo/submission preparation |
+The user's confirmed allocation: Member 1 has local Gemma + VM, Member 2 has local Gemma only, Members 3/4 have neither. No one is required to download another model/VM merely to do their assigned role.
 
-Approximate effort target: 30/30/30/10, not a claim about completed contributions. Resource assignments are role slots; swap people if hardware overlaps. Person 1 owns shared context/contracts and integration; Person 2 proposes Python dependency needs to Person 1; Person 3 owns frontend dependencies. Do not independently rewrite shared files. Person 4 does not own runtime development or VM setup.
+| Member | Available hardware | Branch | Work |
+|---|---|---|---|
+| 1 | Local Gemma + Windows VM | `member-1/windows-desktop-vm` | Windows registry/executor, selected-window computer use, live guest validation |
+| 2 | Local Gemma only | `member-2/local-gemma-agent` | Local Ollama adapter, provider protocol, agent reasoning and local text/vision evidence |
+| 3 | No local Gemma/VM | `member-3/backend-hosted-api` | Backend API/session/approval, hosted Gemma adapter, minimal UI and integration |
+| 4 | No local Gemma/VM | `member-4/docs-demo-submission` | Lighter documentation, hackathon-template alignment and submission preparation |
+
+Ownership:
+
+- Member 1: `src/troubleshoot/windows/`, `desktop/`, native-tool unit tests, `tests/e2e/windows/`, `scripts/vm/`, VM_STATUS, VALIDATION and sanitized Windows evidence.
+- Member 2: `src/troubleshoot/providers/base.py`, `providers/ollama.py`, `agent/`, local-provider/agent unit tests and local-model documentation/evidence.
+- Member 3: `src/troubleshoot/api/`, `runtime/`, `providers/gemma_api.py`, `contracts.py`, API/hosted/contract tests, `web/`, `tests/e2e/web/`, Python packaging/config/lock, startup scripts and shared context/contract docs.
+- Member 4: README, CLAUDE.md, TEMPLATE_GUIDE, SUBMISSION_CHECKLIST, DEMO_SCRIPT, ATTRIBUTION and CONTRIBUTIONS. No runtime development or infrastructure setup.
+
+Keep Members 1–3's work substantial and Member 4 lighter (rough target 30/30/30/10; not claimed completed contributions). Member 3 owns shared schemas/integration and Python dependency changes; Member 2 owns the provider protocol and agrees it with Member 3; Member 1 provides executor interfaces. Changes across ownership boundaries are proposed and coordinated, not silently applied.
+
+Member 3 develops with injected synthetic model/tool fixtures and, when credentials/account access exist, the hosted Gemma API. No local model or VM is needed for API/session/UI work. Production must never silently substitute test fixtures for a real provider. The shipped default stays local-first.
+
+The first three branch names have changed to match ownership. See docs/RESTART.md for migration from the previous names. Existing fresh shared contracts/tests remain usable and move in ownership to Member 3.
 
 ## 4. New architecture
 
@@ -39,7 +52,7 @@ Thinker/actor/verifier are runtime roles with separate contexts using one model,
 
 ## 5. Shared v1 contract — first subset implemented
 
-Read docs/CONTRACTS.md and src/troubleshoot/contracts.py for the first implemented subset and synthetic fixture. Person 1 completes remaining schemas; Persons 2/3 consume them. The following names are a proposed new API, not working endpoints or compatibility requirements:
+Read docs/CONTRACTS.md and src/troubleshoot/contracts.py for the first implemented subset and synthetic fixture. Member 3 completes remaining schemas with Members 1/2; all three consume the shared contract. The following names are a proposed new API, not working endpoints or compatibility requirements:
 
 - `GET /api/status`: configured provider/model, capabilities and separate readiness state. Configuration is not inference proof.
 - `POST /api/runs`: complaint, `mode=diagnose|repair`, provider choice, optional selected target, vision opt-in, cloud text/image consent. Return run ID.
@@ -55,22 +68,22 @@ Read docs/CONTRACTS.md and src/troubleshoot/contracts.py for the first implement
 
 Approval binds run/action/arguments/target/observation, expires and cannot be replayed. Target/geometry changes require a new observation and policy decision. Never approve one action then execute another.
 
-Person 1's first small integration commit is schemas + synthetic fixtures, not a full application. Until available, Persons 2/3 can author internal modules/UI shell against this written proposal. They must reconcile names once Person 1 publishes actual schemas.
+The initial contract subset and synthetic fixture already exist. Member 3 publishes remaining API/approval/verdict schemas; Member 2 publishes the provider protocol; Member 1 publishes executor validators/results. Agree these before wiring. They are interfaces for fresh components, not a claim that those runtime components exist.
 
 ## 6. Fresh implementation sequence and integration
 
-1. Person 1 authors minimal package/test setup and shared schemas; Person 2 authors a read-only tool plus target identity checks; Person 3 creates a minimal UI and checks clean VM readiness; Person 4 prepares truthful planning docs.
-2. Integrate actual local Gemma request and one read-only tool end-to-end. Use a real model smoke check; mocked fixtures stay labeled.
-3. Add one scoped mutation, specific approval, denial/cancellation and measured postcondition/recovery. Build tests for failure as well as success.
-4. Add selected-window capture, image reasoning and one bounded input action with freshness checks. First fixture validation, then a supported guest application scenario.
-5. Add hosted Gemma via explicit provider selection/consent if account access permits; measure text and images separately. Preserve the working local path.
-6. Run guest evidence, document setup and limitations, prepare final submission. Defer additional categories and polish if the core slice is not proven.
+1. Member 3 completes API/event/approval schemas and a minimal API skeleton using injected fixtures. Member 2 publishes provider protocol and a real local Gemma adapter. Member 1 builds a read-only Windows tool and checks clean VM readiness. Member 4 aligns documents with the supplied template.
+2. Integrate the local-first path: Member 3's API/UI calls Member 2's coordinator/provider and Member 1's registered tools. Prove actual local Gemma plus fresh read-only evidence. Synthetic fixtures stay labeled.
+3. Add a scoped reversible mutation with action-specific approval, denial/cancellation and deterministic postchecks/recovery. Member 1 runs guest evidence; Member 3 verifies session/policy behavior; Member 2 constrains model proposals.
+4. Add opt-in selected-window capture and one bounded desktop action. Member 1 handles targeting/execution; Member 2 handles actual local vision reasoning; Member 3 supplies consent/approval/event UI and API.
+5. Member 3 adds an explicit hosted Gemma adapter to the same provider protocol if account/key access permits. Text and image smoke tests are separate. Missing access is a documented blocker, not an automatic local-model installation requirement.
+6. Member 1 records live guest evidence; Member 2 records local-model evidence; Member 3 records API/hosted/UI evidence. Member 4 uses those facts for final docs/demo/submission preparation.
 
-Keep PRs small and target main. Each person commits with their real identity; Person 1 coordinates integration under team authorization. Rebase/merge only fresh work, never resurrect the removed import. Before merging, update from origin/main and rerun relevant checks. No force-pushing or cross-member overwrites.
+PRs target main. Member 3 coordinates reviewed integration under team authorization, with each technical owner reviewing their component. Use actual authorship, fresh code, focused commits and relevant checks. No force push or cross-member overwrites. The branch migration changes role labels, not the project goal or existing implementation.
 
 ## 7. Local and hosted Gemma
 
-Persons 1 and 2 already have Gemma 4 installed according to the user. Inspect installed tags, runtime API and capability support without redownloading weights. `gemma4:e2b` is a candidate tag, not proof it is available on every machine. Record actual tag/provider/version and successful inference.
+Members 1 and 2 have local Gemma; Member 1 also has the VM. Member 3 has no local model and owns hosted transport/API development. Inspect installed tags, runtime API and capability support without redownloading weights. `gemma4:e2b` is a candidate tag, not proof it is available on every machine. Record actual tag/provider/version and successful inference.
 
 Hosted option: Gemma through Google's API, not a Gemini-family model labeled Gemma. Consult current official documentation at https://ai.google.dev/gemma/docs/core/gemma_on_gemini_api and confirm account/model availability. Do not assume a particular ID, free quota, image support or credentials. Backend stores key in environment; commit placeholder-only configuration when implemented. No key in browser bundles.
 
@@ -110,8 +123,14 @@ The supplied rule snapshot distinguishes official observations, conditional requ
 
 Supplied schedule: 8 October 2026, build/submission deadline 16:30 IST; team target 16:15. Use actual remaining time and verified organizer revisions. Public GitHub + open-source license is required for the Open-Source AI challenge according to the snapshot, but repository stays private until user explicitly authorizes release. No automatic publication at deadline. Do not submit forms or upload on this preparation request.
 
-Member 4 prepares current fields and eligibility questions; designated authorized teammate submits through actual OrganizerHQ and retains acceptance evidence. A push is not submission. Agent Skill format is relevant only if actually entering a skill; an agent application is not automatically a skill entry. Unplugged details and unpublished judging requirements remain unknown.
+Member 4 follows docs/TEMPLATE_GUIDE.md and the user-supplied hackathon repository template, prepares current fields and eligibility questions; designated authorized teammate submits through actual OrganizerHQ and retains acceptance evidence. A push is not submission. Agent Skill format is relevant only if actually entering a skill; an agent application is not automatically a skill entry. Unplugged details and unpublished judging requirements remain unknown.
 
 ## 12. Prompt for every member's AI agent
 
-“Read AGENTS.md, PROJECT_CONTEXT.md, docs/RESTART.md, HACKATHON_AGENT_RULES.md and my MEMBER_N assignment. Update my assigned branch safely. The old prototype reuse permission was withdrawn: do not use old source/history/tests/prompts/manifests/build output as implementation input. Create my component from requirements in the new planned paths. Coordinate schemas with Member 1, preserve file ownership, build fresh tests/evidence and keep the repo private. Report what actually works and what remains pending.”
+“Read AGENTS.md, PROJECT_CONTEXT.md, docs/RESTART.md, HACKATHON_AGENT_RULES.md and my MEMBER_N assignment. Update my assigned branch safely. The old prototype reuse permission was withdrawn: do not use old source/history/tests/prompts/manifests/build output as implementation input. Create my component from requirements in the new planned paths. Coordinate API/contracts with Member 3 and provider protocol with Member 2, preserve file ownership, build fresh tests/evidence and keep the repo private. Report what actually works and what remains pending.”
+
+## 13. Hackathon template alignment
+
+Member 4 considers https://github.com/BIJJUDAMA/hacktoberfest-hack-day-coimbatore-x-init-club-and-idea-club, inspected at revision `6d3765e3c5adb7ad708dfc4593b5365001d36d55` on 8 October 2026. Relevant README/agent guidance is mapped in docs/TEMPLATE_GUIDE.md. We adapt documentation structure, preserve our project goal and implementation paths, and keep working/pending status explicit.
+
+The template includes demo-video and Devpost sections, while the earlier event snapshot describes OrganizerHQ. Member 4 records both and confirms current submission expectations; no portal, upload or publication is inferred from a template placeholder. Local Windows control does not need a hosted public control endpoint just to fill a live-app link.
