@@ -21,3 +21,7 @@ A disabled guest adapter may sever inference access. Choose a first repair scena
 Keep OS license acceptance and UAC with the user. Verify actual Windows desktop/dependencies, resource headroom and recovery state; record time and evidence in VALIDATION.md when available. No old VM repair results count for the fresh build.
 
 Member 2 helps with local-model/image reasoning; Member 3 helps API/hosted transport. Neither needs a second VM to complete their role. Record fresh guest evidence for Member 4 to document.
+
+Fresh mouse validation (source `2fa7187`): all 22 native guest checks passed at 12:55:55 IST on 8 October 2026, including movement/click/double click/scroll/slider drag and refusal/cancellation/recovery cases. Report: `docs/evidence/windows/mouse-2026-10-08.json`. Demo work and recording are deferred; a synthetic controller script remains available for later. No Gemma or real application repair was tested in this mouse suite.
+
+At 13:10 IST, fresh real host-local Gemma text inference was connected to the guest native checkbox harness: human-approved Off → On, independent fixture-state verification, Off restoration and fixture closure passed. Live selected-window image inference returned unknown and blocked the action. Spooler was Running; there are no configured printers or Microsoft PDF driver/package, so actual print verification remains blocked. Exact reports and implementation limits are in VALIDATION.md. No new fault, driver download or VM/model duplication was required.

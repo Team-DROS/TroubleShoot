@@ -1,6 +1,7 @@
-param([ValidateSet('list_targets','observe','capture','toggle_checkbox','graceful_close')][string]$Operation)
+param([ValidateSet('list_targets','observe','capture','toggle_checkbox','graceful_close','mouse_move','mouse_click','mouse_double_click','mouse_scroll','mouse_drag')][string]$Operation)
 $ErrorActionPreference='Stop'
 [Console]::OutputEncoding=New-Object Text.UTF8Encoding($false)
+$inputMutex=$null;$inputAcquired=$false
 try {
     Add-Type -AssemblyName UIAutomationClient
     Add-Type -AssemblyName UIAutomationTypes
@@ -36,6 +37,7 @@ public static class TSWindow {
 }
 '@
     }
+    . (Join-Path $PSScriptRoot 'mouse-native.ps1')
     [TSWindow]::SetThreadDpiAwarenessContext([IntPtr](-4)) | Out-Null
     $raw=[Console]::In.ReadToEnd()
     $payload=if($raw.Trim()){$raw|ConvertFrom-Json}else{[pscustomobject]@{}}
@@ -95,8 +97,10 @@ public static class TSWindow {
         $controls=@(ControlRows $root)
         if(-not (SameTarget $target (Identity $handle))){throw 'target_changed'}
         return @{target=$target;observed_at=[DateTime]::UtcNow.ToString('o');bounds=(Bounding ([TSWindow]::Bounds($h)));
-            dpi=[int][TSWindow]::GetDpiForWindow($h);foreground=([TSWindow]::GetForegroundWindow() -eq $h);controls=$controls;capture_allowed=$script:captureSafe}
+            dpi=[int][TSWindow]::GetDpiForWindow($h);foreground=([TSWindow]::GetForegroundWindow() -eq $h);controls=$controls;capture_allowed=$script:captureSafe;
+            cursor=@([TSMouse]::Cursor());virtual_screen=@([TSMouse]::Virtual());client_bounds=(BoundingClient ([TSMouse]::Client($handle)))}
     }
+    function BoundingClient($r){return @{left=$r[0];top=$r[1];width=$r[2];height=$r[3]}}
     function CheckSnapshot($expected) {
         $age=([DateTimeOffset]::UtcNow-[DateTimeOffset]::Parse($expected.observed_at)).TotalSeconds
         if($age -lt 0 -or $age -gt 5){throw 'stale_observation'}
@@ -117,7 +121,14 @@ public static class TSWindow {
         if($expected.dpi -ne [int][TSWindow]::GetDpiForWindow($h)){throw 'geometry_changed'}
         if([TSWindow]::GetForegroundWindow() -ne $h){throw 'foreground_changed'}
     }
-    if($Operation -eq 'list_targets') {
+    if($Operation -like 'mouse_*' -or $Operation -in @('toggle_checkbox','graceful_close')) {
+        $inputMutex=New-Object Threading.Mutex($false,'Local\TroubleShoot.DesktopMouse')
+        try {$inputAcquired=$inputMutex.WaitOne(0)}catch [Threading.AbandonedMutexException] {$inputAcquired=$true;throw 'mouse_previous_crash'}
+        if(-not $inputAcquired){throw 'mouse_busy'}
+    }
+    if($Operation -like 'mouse_*') {
+        $result=Invoke-MouseOperation $Operation $payload
+    } elseif($Operation -eq 'list_targets') {
         $targets=@()
         foreach($handle in [TSWindow]::Visible()) {
             if($targets.Count -ge 32){break}
@@ -189,8 +200,11 @@ public static class TSWindow {
     }
     @{ok=$true;evidence=$result}|ConvertTo-Json -Depth 16 -Compress
 }catch {
-    $known=@('hidden_target','protected_target','protected_content','target_changed','stale_observation','geometry_changed','foreground_changed','capture_consent_required','capture_size_limit','capture_failed','control_changed')
+    $known=@('hidden_target','protected_target','protected_content','target_changed','stale_observation','geometry_changed','foreground_changed','capture_consent_required','capture_size_limit','capture_failed','control_changed',
+        'mouse_input_cancelled','emergency_stop','user_input_active','user_cursor_moved','point_outside','point_occluded','invalid_mouse_arguments','input_delivery_failed','cursor_position_failed','cursor_unavailable','mouse_busy','mouse_previous_crash','double_click_expired')
     $code=if($_.Exception.Message -in $known){$_.Exception.Message}else{'native_failure'}
     @{ok=$false;code=$code}|ConvertTo-Json -Compress
     exit 1
+}finally {
+    if($inputMutex){if($inputAcquired){$inputMutex.ReleaseMutex()};$inputMutex.Dispose()}
 }
