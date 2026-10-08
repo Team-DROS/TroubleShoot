@@ -1,6 +1,6 @@
 // Cache only the public app shell. Never cache APIs, observations or credentials.
-const CACHE = "troubleshoot-shell-v1";
-const SHELL = ["/", "/app.js", "/style.css", "/manifest.webmanifest", "/icon-192.png", "/icon-512.png"];
+const CACHE = "troubleshoot-shell-v2";
+const SHELL = ["/", "/app.js", "/style.css", "/manifest.webmanifest", "/icon-192.png", "/icon-512.png", "/fonts/space-grotesk.woff2", "/fonts/dm-mono.woff2"];
 self.addEventListener("install", event => event.waitUntil(
   caches.open(CACHE).then(cache => cache.addAll(SHELL)).then(() => self.skipWaiting())
 ));

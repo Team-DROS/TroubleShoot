@@ -3,6 +3,7 @@ import { Brand, Icon } from './components/Icon'
 import Core from './components/Core'
 
 const Demo = lazy(() => import('./components/Demo'))
+const assistant = "http://127.0.0.1:8765/"
 const repository = 'https://github.com/Team-DROS/TroubleShoot'
 
 const workflow = [
@@ -59,11 +60,11 @@ const workflow = [
 const faqs = [
   [
     'Can I use this to repair my computer today?',
-    'This is an interactive frontend preview. You can explore the workflow with sample printer, audio, and network scenarios. The real TroubleShoot app runs locally on Windows: local Gemma proposes one bounded action, you approve it, and fresh checks verify the result. It is an early build tested on sample and virtual-machine scenarios. This website is only a preview and cannot inspect or change your device.',
+    'This is an interactive frontend preview. You can explore the workflow with sample printer, audio, and network scenarios. The real TroubleShoot app runs locally on Windows: hosted Gemma proposes one bounded action, you approve it, and fresh checks verify the result. It is an early build tested on sample and virtual-machine scenarios. This website is only a preview and cannot inspect or change your device.',
   ],
   [
     'What stays on my computer?',
-    'The default uses local Gemma through Ollama, so prompts stay on your computer. The optional hosted mode requires explicit consent before sending text, with a separate choice for images. This preview runs entirely in your browser and does not send your scenario input to a server.',
+    'The Windows helper executes registered operations locally. The current prototype uses hosted Gemma: your complaint and observed text leave the device only after explicit per-run consent. Images are disabled. This preview runs entirely in your browser and does not send your scenario input to a server.',
   ],
   [
     'What will TroubleShoot be allowed to change?',
@@ -71,7 +72,7 @@ const faqs = [
   ],
   [
     'Which platforms are supported?',
-    'The application is being designed for Windows. This responsive website and its sample walkthrough work in modern desktop and mobile browsers. Native troubleshooting will require the local Windows application once it is available.',
+    'The application is being designed for Windows. This responsive website and its sample walkthrough work in modern desktop and mobile browsers. Native troubleshooting requires the Windows helper running on the same PC. Use the setup section to launch the working PWA.',
   ],
 ]
 
@@ -200,10 +201,13 @@ export default function App() {
               <p className="hero-description">
                 Your computer should move you forward.
                 <br className="desktop-break" /> Meet a calmer way to troubleshoot Windows—
-                <br className="desktop-break" /> with local AI and you in control.
+                <br className="desktop-break" /> with Gemma AI and you in control.
               </p>
               <div className="hero-actions">
-                <button className="button button-primary" onClick={openDemo}>
+                <a className="button button-primary" href="#assistant-setup">
+                  Open Windows assistant <Icon name="up-right" size={18} />
+                </a>
+                <button className="button button-outline" onClick={openDemo}>
                   Explore the demo <Icon name="arrow" size={18} />
                 </button>
                 <a className="text-link" href="#workflow">
@@ -390,10 +394,10 @@ export default function App() {
                   Closer to you.
                 </h3>
                 <p>
-                  Designed around local Gemma inference. Your machine’s context stays where it
-                  belongs, unless you explicitly choose a hosted mode.
+                  Windows tools run on your device. Hosted Gemma receives the complaint and
+                  observed text only after your explicit consent for each run.
                 </p>
-                <span className="feature-footnote">LOCAL-FIRST ARCHITECTURE</span>
+                <span className="feature-footnote">LOCAL EXECUTION · CONSENTED CLOUD AI</span>
               </article>
               <article className="feature-card">
                 <div className="feature-top">
@@ -515,6 +519,22 @@ export default function App() {
               ))}
             </div>
           </div>
+        </section>
+
+        <section id="assistant-setup" className="assistant-setup container" aria-labelledby="assistant-setup-title">
+          <SectionLabel number="LIVE">WINDOWS ASSISTANT</SectionLabel>
+          <h2 id="assistant-setup-title">A real diagnosis.<br /><span className="lime-text">On your Windows PC.</span></h2>
+          <p>This website is the product preview. The working PWA connects to a Windows helper on your PC and asks hosted Gemma for a bounded diagnosis. Approvals and fresh checks stay visible.</p>
+          <ol>
+            <li>Clone the repository and follow the Windows setup guide. Configure your API key in the local masked dialog.</li>
+            <li>Run <code>scripts/start-api-pwa.ps1</code>. It opens an authenticated assistant automatically.</li>
+            <li>Choose Diagnose only, select this computer, and consent to the run's cloud text transfer.</li>
+          </ol>
+          <div className="hero-actions">
+            <a className="button button-primary" href={assistant} target="_blank" rel="noreferrer">Open running helper <Icon name="up-right" size={18} /></a>
+            <a className="text-link" href={`${repository}/blob/main/docs/API_PWA.md`} target="_blank" rel="noreferrer">Windows setup guide <Icon name="up-right" size={16} /></a>
+          </div>
+          <p className="assistant-note">The helper link uses port 8765 and opens a separate local app. If the page is unavailable, start the helper first. Custom ports use the launcher's URL. A new tab may require your local session token; use the launcher for automatic connection. No API key belongs in this website.</p>
         </section>
 
         <section className="closing-section">

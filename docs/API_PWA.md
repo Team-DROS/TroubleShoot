@@ -86,3 +86,24 @@ responses. The reported hosted_unavailable failure could not be reproduced: a fr
 key check returned HTTP 200, and a fresh real read-only diagnosis completed successfully.
 Eleven hosted-provider tests and seven synthetic console UI tests passed for this update.
 These checks do not prove live installation or a successful print.
+
+
+## Hosted website and matching PWA
+
+The product website is https://troubleshoot-one.vercel.app/. The landing page now
+includes Windows helper setup and an Open running helper link to port 8765. The PWA
+links back to the website and uses its dark/lime palette, Space Grotesk and DM Mono
+fonts. Fonts are self-hosted with their license text in the console package.
+
+This is a website-to-local-app handoff, not remote control from the Vercel page.
+The existing same-origin/session protections remain. Run start-api-pwa.ps1 to open
+an authenticated tab; opening another tab directly may need a local session token.
+Custom ports use the URL opened by the launcher. No API key is sent to the website.
+
+Fresh Edge browser validation passed: PWA loads without JavaScript errors, matching
+font renders, public website link is correct, and cached shell reloads offline with
+an offline notice. Mobile layouts have no horizontal overflow at 390px. The built
+landing page exposes correct helper/setup links. Frontend production build, 10 React
+fixture checks, 7 console fixture checks and 42 API/runtime checks passed. Actual
+browser installation remains pending. Hosted deployment depends on Vercel's configured
+production branch; source changes alone are not proof of a completed deployment.

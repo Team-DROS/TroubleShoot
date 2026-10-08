@@ -178,4 +178,10 @@ def create_app(manager, session_token, *, port=8765, web_root=None):
             return JSONResponse({"error": "not_found"}, status_code=404)
         return FileResponse(root / f"icon-{size}.png", media_type="image/png")
 
+    @app.get("/fonts/{name}.woff2")
+    async def font(name: str):
+        if name not in ("space-grotesk", "dm-mono"):
+            return JSONResponse({"error": "not_found"}, status_code=404)
+        return FileResponse(root / f"{name}.woff2", media_type="font/woff2")
+
     return app

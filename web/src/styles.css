@@ -2555,3 +2555,13 @@
     }
   }
 }
+
+@layer components {
+  .assistant-setup{padding-block:90px;border-top:1px solid var(--line)}
+  .assistant-setup h2{font-size:clamp(2rem,5vw,3.5rem);line-height:1.08;letter-spacing:-.04em;margin:24px 0}
+  .assistant-setup p,.assistant-setup ol{max-width:760px;color:var(--muted);line-height:1.7}
+  .assistant-setup ol{padding-left:22px;margin:24px 0}
+  .assistant-setup li{padding:6px 0}
+  .assistant-setup code{font-family:var(--mono);color:var(--lime)}
+  .assistant-setup .assistant-note{font-size:.85rem;margin-top:20px}
+}
