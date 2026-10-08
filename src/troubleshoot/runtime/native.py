@@ -18,9 +18,11 @@ from pathlib import Path
 
 from troubleshoot.contracts import Check, ContractError, ExecutionResult, Observation, Target, require_target
 from troubleshoot.desktop.executor import DESKTOP_VALIDATORS, DesktopExecutor
+from troubleshoot.desktop.recovery import CheckboxRecovery
 from troubleshoot.windows.policy import ExecutionContext
 from troubleshoot.windows.registry import WINDOWS_VALIDATORS, WindowsExecutor
 from troubleshoot.runtime.ports import Operation, RuntimeFailure, Snapshot
+from troubleshoot.runtime.powershell_worker import PersistentPowerShellWorker
 
 
 def now():
@@ -30,25 +32,31 @@ def now():
 class NativeExecutorAdapter:
     native_authorization = True
 
-    def __init__(self, windows=None, desktop=None, *, recovery_dir=None, desktop_repairs=False):
+    def __init__(self, windows=None, desktop=None, *, recovery_dir=None, desktop_repairs=False,
+                 symptom_verifier=None, worker=None):
         self.recovery_dir = Path(recovery_dir or Path.cwd() / "data" / "recovery")
-        self.windows = windows if windows is not None else WindowsExecutor(recovery_dir=self.recovery_dir)
-        self.desktop = desktop if desktop is not None else DesktopExecutor()
+        self.worker = worker
+        self.windows = windows if windows is not None else WindowsExecutor(worker=worker, recovery_dir=self.recovery_dir)
+        self.desktop = desktop if desktop is not None else DesktopExecutor(worker=worker)
+        self.checkbox_recovery = CheckboxRecovery(self.desktop, self.recovery_dir)
+        self.symptom_verifier = symptom_verifier
+        self.permissions_ready = False
         # This is an explicitly logical system scope, not a fabricated HWND.
         self.system_target = Target(1, os.getpid(), now())
         self.machine = hashlib.sha256((os.environ.get("COMPUTERNAME", "") + "|" + str(Path.home())).encode()).hexdigest()
-        self.desktop_repairs = desktop_repairs
+        # An environment switch alone cannot establish a real symptom verifier.
+        self.desktop_repairs = desktop_repairs and callable(symptom_verifier)
         self.operations = {name: Operation(validate, name == "start_spooler",
             "Spooler service state only; actual printing remains unverified" if name in {"start_spooler", "spooler_status"}
             else "Fresh diagnostic evidence; original symptom remains unverified",
             "Conditional service restoration; uncertain outcomes require operator inspection" if name == "start_spooler" else "No mutation")
             for name, validate in WINDOWS_VALIDATORS.items()}
         for name, validate in DESKTOP_VALIDATORS.items():
-            if name == "capture_target" or (name != "inspect_target" and not desktop_repairs):
+            if name != "inspect_target" and not (name == "toggle_checkbox" and self.desktop_repairs):
                 continue
             self.operations[name] = Operation(validate, name != "inspect_target",
                 "Selected control/window state only; original symptom remains unverified",
-                "Human restoration/reopening required; automatic desktop rollback is unavailable")
+                "Durable checkbox baseline; restoration requires fresh target checks and a new approval")
         self.snapshots = {}
 
     def status(self):
@@ -58,7 +66,15 @@ class NativeExecutorAdapter:
             pending = -1
         return {"platform": "windows", "desktop_repairs": self.desktop_repairs,
                 "capture_available": False, "pending_recovery_records": pending,
+                "worker_transport": "persistent" if self.worker else "injected_or_owner_default",
                 "operations": list(self.operations)}
+
+    async def prepare_repair(self):
+        await asyncio.to_thread(self._private_recovery_directory)
+
+    async def close(self):
+        if self.worker:
+            await asyncio.to_thread(self.worker.close)
 
     def require_recovery_ready(self):
         if self.status()["pending_recovery_records"] != 0:
@@ -101,6 +117,8 @@ class NativeExecutorAdapter:
     def _private_recovery_directory(self):
         """Restrict Windows ACLs before the owner executor persists a mutation."""
         self.require_recovery_ready()
+        if self.permissions_ready:
+            return
         self.recovery_dir.mkdir(parents=True, exist_ok=True)
         marker = self.recovery_dir / ".machine"
         if marker.exists() and marker.read_text(encoding="utf-8") != self.machine:
@@ -122,6 +140,7 @@ class NativeExecutorAdapter:
         else:
             self.recovery_dir.chmod(0o700)
         marker.write_text(self.machine, encoding="utf-8")
+        self.permissions_ready = True
 
     async def execute_authorized(self, action, observation, mode, cancelled, run_id, authorize):
         snapshot, raw = self.snapshots[observation.observation_id]
@@ -145,7 +164,7 @@ class NativeExecutorAdapter:
                 future.cancel()
                 accepted = False
             if accepted:
-                if action.operation in {"toggle_checkbox", "graceful_close"}:
+                if action.operation == "graceful_close":
                     record = self.recovery_dir / f"{uuid.uuid4()}.json"
                     try:
                         record.write_text(json.dumps({"state": "pending", "machine": self.machine,
@@ -175,7 +194,7 @@ class NativeExecutorAdapter:
                 return NativeResult("ok", self.desktop.observe(action.target).metadata)
             if action.operation == "toggle_checkbox":
                 self._private_recovery_directory()
-                return self.desktop.toggle_checkbox(raw, action.arguments, context)
+                return self.checkbox_recovery.apply(raw, action.arguments, context)
             if action.operation == "graceful_close":
                 self._private_recovery_directory()
                 return self.desktop.graceful_close(raw, action.arguments, context)
@@ -206,7 +225,7 @@ class NativeExecutorAdapter:
         elif result.changed is None or result.evidence.get("pending_recovery"):
             recovery = "pending"
         elif action.operation in {"toggle_checkbox", "graceful_close"} and result.changed is True:
-            recovery = "pending"  # no safe generic desktop rollback exists
+            recovery = "pending"  # baseline retained until separately approved restoration
         return ExecutionResult(result.status, recovery)
 
     async def verify(self, action, complaint):
@@ -238,8 +257,11 @@ class NativeExecutorAdapter:
             checks.append(Check("Fresh native diagnostic", "Collected", current.status,
                                 current.status == "ok", now()))
         # Neither OS facts, adapter state, service state nor control state proves the complaint.
-        checks.append(Check("Original symptom", "Measured symptom restored",
-                            "No symptom-specific verifier is integrated", False, now()))
+        if action.operation == "toggle_checkbox" and self.symptom_verifier:
+            checks.extend(await self.symptom_verifier(action, complaint))
+        else:
+            checks.append(Check("Original symptom", "Measured symptom restored",
+                                "No symptom-specific verifier is integrated", False, now()))
         return checks
 
 
@@ -248,4 +270,4 @@ def native_executor_from_env():
         return None
     return NativeExecutorAdapter(
         recovery_dir=Path(os.getenv("TROUBLESHOOT_RECOVERY_DIR") or str(Path.cwd() / "data" / "recovery")),
-        desktop_repairs=os.getenv("TROUBLESHOOT_DESKTOP_REPAIRS") == "1")
+        worker=PersistentPowerShellWorker(), desktop_repairs=False)

@@ -82,6 +82,8 @@ class SessionManager:
         if request.provider not in self.providers:
             raise RuntimeFailure("provider_unavailable")
         provider_status = await asyncio.to_thread(self.providers[request.provider].status)
+        if request.mode == "repair" and self.executor and hasattr(self.executor, "prepare_repair"):
+            await self.executor.prepare_repair()
         return self.create(request, target, provider_status=provider_status)
 
     def create(self, request, target=None, *, provider_status=None):
@@ -338,3 +340,5 @@ class SessionManager:
         for task in tasks:
             task.cancel()
         await asyncio.gather(*tasks, return_exceptions=True)
+        if self.executor and hasattr(self.executor, "close"):
+            await self.executor.close()
