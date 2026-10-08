@@ -1,143 +1,159 @@
 # TroubleShoot
 
-> A local-first Windows troubleshooting assistant that helps people investigate a problem, review a proposed action, and check whether the symptom changed.
+> A local-first Windows troubleshooting assistant that gathers evidence, asks Gemma for a bounded proposal, requests specific approval and checks the outcome.
+
+**Team:** DROS · **Build date:** 8 October 2026 · **Repository:** private
+
+This README describes the integrated implementation on `member-3/backend-hosted-api`, revision `3290250`, including Member 2 `6ed184b` and Member 1 `3edf350`. [PR #1](https://github.com/Team-DROS/TroubleShoot/pull/1) targets main and awaits team agreement before merging. This documentation branch does not itself contain the integrated runtime; use the branch in the setup commands.
 
 ## Team
 
-**Team Name:** DROS
-
-| Member | Contribution recorded in this repository |
+| Member | Completed work recorded in the repository |
 | --- | --- |
-| Pranesh Subramanian (Member 1) | Assigned: Windows tools, selected-window interaction, and Windows guest validation. Completed work is not verified in this checkout. |
-| Umasuthan Palaniappan (Member 2) | Assigned: local Gemma provider and agent reasoning. Completed work is not verified in this checkout. |
-| Srinath Balakrishnan (Member 3) | Implemented the shared contracts, backend API/session flow, hosted Gemma adapter, minimal UI, packaging, setup documentation, and synthetic tests on `member-3/backend-hosted-api`. |
-| Sanjeev Singotam (Member 4) | Assigned: project documentation, demo preparation, and submission checklist. Completed work is not verified in this checkout. |
+| Pranesh Subramanian — Member 1 | Windows/desktop executors, guarded mouse primitives, conditional checkbox recovery, guest validation and real Gemma guest harness evidence. |
+| Umasuthan Palaniappan — Member 2 | Local Ollama provider, protocol/reasoning, runtime adapter, mouse schemas, configurable decision timeout and real model evidence. |
+| Srinath Balakrishnan — Member 3 | Shared contracts, authenticated API/session runtime, approvals/cancellation, hosted transport, minimal UI, native/provider integration, persistent PowerShell transport, packaging and validation. |
+| Sanjeev Singotam — Member 4 | Template-aligned documentation, attribution/contribution records, demo script and submission preparation/checklist. |
 
-Member assignments are not proof that another branch's work has been integrated. The verified Member 3 work and limits are recorded in [validation notes](docs/MEMBER_3_VALIDATION.md).
+These are role-based contributions. Git history and the evidence below distinguish authored components, automated tests and live runs; no contribution percentages are claimed.
 
 ## Problem Statement
 
 ### The Problem
 
-When a Windows application or service behaves unexpectedly, people often have to interpret diagnostic advice, decide which actions are safe, and determine whether those actions fixed the original symptom. Some Windows troubleshooters already offer automated repairs; the challenge is helping users follow a clear, controlled troubleshooting flow and see evidence of its result.
+When Windows applications or services fail, people must interpret diagnostic advice, decide which action is appropriate and determine whether it fixed the original symptom. Windows already has automated troubleshooters. Our aim is a limited conversational workflow with visible action approval and measured results.
 
 ### Why We Chose This Problem
 
-The team wants to make troubleshooting easier to follow while keeping consequential actions visible and under user control. The project is an early, limited step toward that goal; it does not claim to fix every Windows problem.
+Troubleshooting should give users evidence and control over consequential changes. This implementation explores that approach with bounded operations. It does not claim to fix every Windows problem.
 
 ## Solution
 
-TroubleShoot is being built as a local-first assistant. Its intended flow gathers relevant evidence, asks a Gemma model for a bounded proposal, checks the proposal against registered operations, requests approval where needed, and then measures the result. A model proposal or successful tool call alone does not establish that a problem was fixed.
+TroubleShoot combines a browser UI, authenticated loopback backend, Gemma adapters and deterministic native executors. The model proposes allowlisted operations; it cannot supply arbitrary commands or executable code. Execution success is separate from symptom restoration.
 
 ### Key Features
 
-- Implemented: authenticated loopback API, run events, cancellation, and specific single-use approval for a proposed action.
-- Implemented: optional hosted Gemma 4 transport. The user must explicitly consent before complaint text is sent; the API key stays on the backend.
-- Implemented: minimal browser interface for diagnosis, provider status, event timeline, approval, Stop, and truthful result/recovery display.
-- Pending integration: local Gemma, native Windows tools, selected-window capture, persistent recovery, and live repair verification.
-
-The current launcher reports local Gemma as unavailable because its adapter is not integrated in this branch. Hosted inference requires a configured API key and successful real model access. Test fixtures are explicitly labeled synthetic and are never silently substituted for a model.
+| Feature | Current status |
+| --- | --- |
+| Local Ollama `gemma4:e2b` | Implemented and integrated; real inference tested by Members 1/2. No automatic model download or silent fallback. |
+| API/session and browser UI | Implemented: provider status, complaint/mode/target, SSE timeline, specific approval, Stop and truthful verdict/recovery. |
+| Native diagnostics and stopped-Spooler start | Integrated with fixed arguments, exact approval and conditional service recovery. Intentional faults were guest-only. |
+| Fresh target binding | Identity/bounds/DPI comparison and rebinding after inference; five-second freshness remains enforced. |
+| Persistent PowerShell transport | Implemented and read-only tested on Windows; caches process/runspace to reduce repeated startup. Guest timing pending. |
+| Durable recovery blockers | Private directory and machine marker; pending records block repairs, including after restart. |
+| Checkbox recovery | Integrated behind explicit programmatic symptom-verifier injection. Production desktop mutation remains disabled. |
+| Mouse/close primitives | Native tools and mouse model schemas exist, but the production runtime excludes these operations. All five mouse exclusions have regression coverage. |
+| Hosted Gemma | Implemented and mock-tested; explicit consent and backend-only key. Real hosted inference pending credentials/account access. |
+| Capture/vision | Native capture and model image support exist separately; API/UI vision is disabled. Tested guest vision returned unknown and safely blocked input. |
 
 ## Innovation and Differentiation
 
-The intended contribution is a conversational workflow that combines model suggestions with registered operations, user approval, and fresh symptom checks. Windows already has automated troubleshooters; this project does not claim that automated repair itself is new. The integrated Windows workflow and its practical value remain to be demonstrated.
+The contribution is conversational coordination of evidence, model proposals, deterministic action policy and verification. Registered tools, specific approval, fresh observations and recovery constrain the model. A click, service state or model explanation is not proof that an unrelated complaint was fixed.
 
 ## Technical Implementation
 
 ### Architecture
 
-The Member 3 branch implements the loopback API, hosted transport, session policy, and browser interface. The local provider and native Windows executor are integration points whose owning members' work is not verified here.
-
 ```mermaid
 flowchart LR
     UI[Local browser UI] --> API[Authenticated loopback API]
-    API --> Runtime[Bounded run and approval policy]
-    Runtime --> Local[Local Gemma provider<br/>pending integration]
-    Runtime --> Hosted[Hosted Gemma<br/>optional, consented]
-    Local --> Decision[Validate registered proposal]
-    Hosted --> Decision
-    Decision --> Gate[Single-use user approval]
-    Gate --> Native[Windows executor<br/>pending integration]
-    Native --> Verify[Fresh symptom checks<br/>pending native integration]
-    Verify --> Result[Resolved, partial, or unresolved]
+    API --> Runtime[Bounded session runtime]
+    Runtime --> Local[Local Ollama / Gemma 4]
+    Runtime --> Hosted[Optional consented hosted Gemma]
+    Local --> Proposal[Validated registered proposal]
+    Hosted --> Proposal
+    Proposal --> Approval[Specific human approval]
+    Approval --> Native[Native Windows executor]
+    Native --> Verify[Fresh deterministic checks]
+    Verify --> Result[Verdict and recovery state]
 ```
+
+The launcher uses Member 2's single-action runtime adapter, not its separate multistep coordinator. Capture/vision and general desktop repairs are outside the enabled production path.
 
 ### Technology Stack
 
-| Category | Technologies / status |
+| Category | Implemented technology |
 | --- | --- |
-| Frontend | HTML, CSS, and vanilla JavaScript; local browser UI implemented |
-| Backend | Python 3.11+; FastAPI and Uvicorn loopback API implemented |
-| Database | N/A; run state and events are kept in process memory |
-| AI / ML | Hosted Gemma 4 adapter for `gemma-4-26b-a4b-it` or `gemma-4-31b-it`; real inference not yet verified. Local Gemma is assigned to Member 2 and not integrated here. |
-| Infrastructure | Local Windows development; server binds to `127.0.0.1`; no hosted application deployment or VM repair evidence |
-| APIs / Services | Google Gemini API's hosted Gemma endpoint, optional and key-gated; no real request has been verified |
+| Frontend | HTML, CSS and vanilla JavaScript; no npm build step |
+| Backend | Python 3.11+, FastAPI, Uvicorn |
+| Local AI | Ollama, default `gemma4:e2b` |
+| Hosted AI | Optional Google Gemma API transport; real access unverified |
+| Windows tools | Fixed PowerShell workers, .NET UI Automation and guarded native input |
+| State | In-memory sessions/events; durable recovery JSON, no database |
+| Packaging/testing | Setuptools wheel, Python unittest, Node.js UI behavior tests |
+| Deployment | Local loopback application; no public deployment |
 
 ### How It Works
 
-The API accepts a complaint and diagnosis/repair mode, reports provider readiness, and streams run events. Model output is parsed against registered operation validators. A mutation is only considered in repair mode and waits for a one-time approval bound to the run, action, arguments, target, and observation. The runtime rechecks observation freshness and target geometry before execution. Separate checks determine whether the result is resolved, partial, or unresolved.
+The user connects with a session token and submits a complaint, mode, provider and target. The runtime gathers facts and asks the provider for one bounded decision. After inference it re-observes the same target, compares identity/bounds/DPI and binds the proposal to fresh evidence. Changed targets fail closed.
 
-The API and UI are wired to injectable provider and executor interfaces. The production launcher currently has neither a working local provider nor a native Windows executor configured, so it honestly reports those capabilities as unavailable. Browser vision and screenshot transfer are not enabled. Hosted image transport code is consent-gated and covered by mocked transport tests, not integrated into the UI.
+Mutating operations require repair mode and single-use human approval bound to the action and exact native state fingerprint. Approval must finish within the remaining five-second observation window; expiry requires a new run. Native execution repeats its own checks. Persistent transport reduces startup overhead without relaxing freshness or automatically retrying failures.
+
+Fresh deterministic checks produce resolved, partial or unresolved outcomes; cancellation/error are distinct. The current native verifier includes an unmet original-symptom check: Spooler Running can support a partial service-state result, not successful printing. Pending/uncertain recovery blocks further repairs. There is no operator recovery API or automatic startup replay.
 
 ### Technical Decisions
 
-- Local Gemma is the intended default; hosted Gemma is optional and requires explicit text-sharing consent. Image consent is separate.
-- The model may propose a registered action, but deterministic validation and user approval control whether a mutation runs.
-- Diagnose mode cannot perform registered mutating operations. A new observation is checked immediately before execution, and stale or changed targets fail closed.
-- Completion distinguishes resolved, partial, unresolved, cancelled, and error outcomes. Execution success alone is not repair success.
-- Development fixtures are synthetic and visibly labeled. Missing model credentials or providers produce errors instead of mock inference or silent fallback.
-- This is a single-user loopback development application, not a hardened remote service. Run state and recovery indicators are in memory; persistent recovery is not implemented.
+- Local is default; hosted text/image sharing requires separate consent. Keys stay on the backend.
+- No arbitrary shell, model code, terminal typing or UAC bypass is exposed.
+- Diagnose mode prevents registered mutation; cancellation prevents later actions and preserves uncertainty about in-flight changes.
+- The server binds to `127.0.0.1`, validates Host/Origin and requires Bearer authentication for API requests. It is a single-user application.
+- Production desktop changes remain disabled even with `TROUBLESHOOT_DESKTOP_REPAIRS=1`: no real symptom verifier is integrated. Mouse, close and capture are not runtime model actions.
+- Intentional faults and mutation validation belong in a disposable guest with recovery, never on the host.
 
 ## Implementation During the Hackathon
 
-The Member 3 branch contains newly authored backend, hosted-provider transport, browser UI, packaging, contracts, setup documentation, and fixture-based validation. The full suite passed with **52 Python tests and 5 JavaScript UI tests**. The browser smoke check used a synthetic target and returned **unresolved**; it did not demonstrate a live Windows repair or real model inference. See [Member 3 validation notes](docs/MEMBER_3_VALIDATION.md) and [setup and limitations](docs/MEMBER_3_SETUP.md).
+This fresh repository contains newly authored provider/reasoning, native tools, API/runtime, hosted transport, UI, packaging, tests and documentation. The team previously worked on another prototype; the user reported that organizers withdrew reuse permission. Its implementation and Git history were not imported here. Prior experience is disclosed, not presented as a formal clean-room guarantee.
 
-This repository's provenance notes state that the implementation was started afresh after the team withdrew permission to reuse its earlier prototype. No earlier application source or Git history was imported. This is not a claim that the team had no prior prototype or prior experience.
+### Validation and Live Evidence
 
-### Team Contributions
+**196 Python tests + 5 JavaScript tests pass:** 154 unit, 42 API and 5 web behavior tests. Validation ran on Windows with Python 3.14.3 and Node.js 24.18.0, including Member 1's two Windows-only PowerShell tests. Web tests use a synthetic DOM/transport. Mutation/provider fixtures are synthetic; some transport checks are actual read-only Windows calls.
 
-- **Pranesh Subramanian:** assigned the Windows executor, desktop interaction, and guest validation. The contribution and results need confirmation from Member 1's branch.
-- **Umasuthan Palaniappan:** assigned the local Gemma provider and agent reasoning. The contribution and inference evidence need confirmation from Member 2's branch.
-- **Srinath Balakrishnan:** Member 3 backend/API, session approvals and cancellation, hosted Gemma adapter, browser UI, shared contracts, packaging, documentation, and synthetic validation, as recorded on this branch.
-- **Sanjeev Singotam:** assigned documentation, demo preparation, and submission support. The contribution needs confirmation from Member 4's branch.
+| Evidence | Result and limits |
+| --- | --- |
+| Member 3 native read-only session smoke | Actual Windows workers with an explicitly synthetic proposal; partial verdict, no host mutation or model inference. |
+| Persistent transport | Three host service queries reused one process: 0.4014, 0.0086 and 0.0042 seconds. Guest timing is not proven. |
+| Member 2 CPU Gemma/session | Real inference, approval and simulated execution passed with the 150-second timeout. A resolved fixture verdict is not a Windows repair. |
+| Member 1 real Gemma guest harness | Real host-local Gemma text proposal, human approval, native checkbox change, state verification and restoration passed on a synthetic UI. No authenticated API/UI flow or real application symptom was verified. |
+| Member 1 native service/mouse checks | Guest service restoration and guarded controller mechanics passed. Running alone does not prove printing. |
+| Member 1 vision/print probes | Live capture→Gemma returned unknown and blocked input. Printing was unverified because no printer/PDF driver was installed. |
+
+Wheel build, packaged workers, installed entry point, dependency compatibility and whitespace checks pass. A non-failing TestClient deprecation warning remains. Exact commands and limits: [Member 3 validation][validation], [local model integration evidence][local-evidence], [guest validation][guest-evidence].
 
 ## Working Application
 
-**Live Application:** N/A. The application is a local Windows program; there is no public deployment. The UI can be started locally using the instructions below. In the current checkout, providers are unavailable unless hosted Gemma credentials are configured; the local provider and Windows executor still require integration.
+**Live Application:** local installation only; no public deployment. Run the integrated Member 3 branch below. Member 3's PC has no reachable local Gemma; the UI reports unavailable honestly. A teammate's existing model is needed for real local inference. Hosted mode needs authorized credentials and explicit consent.
 
-The included synthetic browser fixture demonstrates event display and an honest unresolved result only. It does not change the host or verify a Windows repair.
+**Pending:** combined real Gemma→authenticated API/UI approval→native guest action→original symptom verification; guest persistent-worker timing; usable capture/vision integration; real hosted inference; a real symptom verifier and operator recovery API before enabling desktop repairs.
 
 ## Demo Video
 
-**Demo Video:** Not recorded or provided in this repository.
+**Demo Video:** no recording/public video link is provided in the verified integration evidence. Member 4 prepared a demo script; its earlier status wording needs reconciliation with current evidence before use. Fixture/harness results must not be described as a full API/UI repair demo.
 
 ## Open Source and AI Usage
 
 ### AI / Models
 
-- **Gemma 4 hosted API:** the backend adapter supports the documented Gemma 4 IDs `gemma-4-26b-a4b-it` and `gemma-4-31b-it`. A real API key, account availability, and successful inference have not been verified. Selecting hosted mode requires explicit consent for sending complaint text to Google's API.
-- **Local Gemma 4:** intended as the default provider, but its adapter is not present in this branch and no local inference is claimed.
+- Ollama `gemma4:e2b` is the implemented default. Members 1/2 recorded real inference; their reports disclose execution locality.
+- Hosted transport supports `gemma-4-26b-a4b-it` and `gemma-4-31b-it`; real account access/quota/inference remain unverified.
+- AI coding assistance was used for fresh implementation. No dataset or fine-tuning is included.
 
 ### Open Source Components
 
-- **FastAPI:** backend HTTP API.
-- **Uvicorn:** local ASGI server.
-- **HTTPX:** bounded hosted API transport and mocked transport tests.
-- **Setuptools:** Python package build configuration.
-- **Dataset:** N/A; no dataset is included or used by the implemented tests.
-
-The application code is distributed under the repository's MIT License. External packages and model/API terms remain subject to their respective upstream licenses and terms. See [Google's Gemma API guide](https://ai.google.dev/gemma/docs/core/gemma_on_gemini_api) for the hosted Gemma integration reference.
+Python, FastAPI, Uvicorn, HTTPX, Setuptools and Ollama are third-party components. [MIT License](LICENSE) covers application code; upstream licenses, Gemma terms, API terms and Windows licensing remain separate. See [attribution](docs/ATTRIBUTION.md) and Google's [Gemma API guide](https://ai.google.dev/gemma/docs/core/gemma_on_gemini_api).
 
 ## Setup and Usage
 
 ### Prerequisites
 
-- Git.
-- Python 3.11 or later.
-- Node.js for the JavaScript UI behavior tests (not needed to run the UI).
-- A hosted Gemma API key only if you want to try hosted inference; no key is included.
+- Git, Python 3.11+ and Windows in the appropriate interactive session for native tools.
+- Existing Ollama `gemma4:e2b` for local inference; startup does not download weights.
+- Human elevation for service mutation. Use a disposable guest for repair validation.
+- Node.js for web tests only; no Node build/service is needed for the UI.
+- Optional backend hosted Gemma key for explicit hosted mode.
 
-### Installation
+### Installation and Running
+
+Use the integrated branch while PR #1 awaits review:
 
 ```powershell
 git clone https://github.com/Team-DROS/TroubleShoot.git
@@ -145,60 +161,71 @@ cd TroubleShoot
 git switch member-3/backend-hosted-api
 python -m venv .venv
 .\.venv\Scripts\python -m pip install -r requirements.lock
+$env:PYTHONPATH = 'src'
+.\.venv\Scripts\python -m troubleshoot.api --port 8765
 ```
+
+Open `http://127.0.0.1:8765`, paste the **local session token** printed by the launcher, and click Connect. Use literal `127.0.0.1`, not `localhost`. The token stays in tab memory and travels in an Authorization header; never put it in URLs or recordings. It is distinct from a hosted API key. Restart generates a new token unless configured. `scripts/start.ps1` is an alternative launcher on the integrated branch.
 
 ### Environment Variables
 
-Set `GEMMA_API_KEY` in the backend environment to enable hosted inference. Optionally set `GEMMA_API_MODEL` to `gemma-4-26b-a4b-it` or `gemma-4-31b-it`. `TROUBLESHOOT_SESSION_TOKEN` optionally sets the local session token; if unset, the launcher generates one. Never commit API keys or place them in browser code. `.env.example` contains placeholders; the app does not automatically load a `.env` file.
+| Variable | Default / purpose |
+| --- | --- |
+| `TROUBLESHOOT_OLLAMA_URL` | `http://127.0.0.1:11434` |
+| `TROUBLESHOOT_OLLAMA_MODEL` | `gemma4:e2b` |
+| `TROUBLESHOOT_OLLAMA_TIMEOUT` | 150-second decision timeout; production overall run budget is 300 seconds |
+| `TROUBLESHOOT_OLLAMA_ALLOW_LAN` | `0`; non-loopback inference needs deliberate opt-in/locality disclosure |
+| `TROUBLESHOOT_SESSION_TOKEN` | Optional token, at least 32 ASCII characters; generated when unset |
+| `TROUBLESHOOT_RECOVERY_DIR` | Stable private recovery location; default `./data/recovery` |
+| `TROUBLESHOOT_DESKTOP_REPAIRS` | Reserved; `1` does not enable production desktop mutation |
+| `GEMMA_API_KEY` | Optional backend key; hosted mode also needs user consent |
+| `GEMMA_API_MODEL` | `gemma-4-26b-a4b-it` |
 
-### Running the Project
+Export variables in the backend environment; `.env.example` is not automatically loaded. Member 1's harness used Ollama port 11435, which is not the default. Keep the recovery path stable; pending records require inspection, not deletion or bypass.
+
+### Automated Checks
 
 ```powershell
-.\scripts\start.ps1
+$env:PYTHONPATH = 'src'
+.\.venv\Scripts\python -m unittest discover -s tests/unit -q
+.\.venv\Scripts\python -m unittest discover -s tests/api -q
+node --test tests/e2e/web/app.test.cjs
 ```
 
-Open `http://127.0.0.1:8765` and enter the local session token printed by the launcher. The server binds only to loopback. See [Member 3 setup notes](docs/MEMBER_3_SETUP.md) for hosted configuration, packaging, and current limitations.
-
-To run the automated checks:
-
-```powershell
-.\scripts\test.ps1
-```
+Expected on the validated Windows revision: 154 unit, 42 API and 5 web tests passing. Some worker tests require Windows. [Setup notes][setup] cover packaging and a separately labelled browser fixture; production never substitutes it.
 
 ### Usage
 
-Connect with the local session token, describe a symptom, select a mode and provider, and start a run. For hosted mode, explicitly consent before sending complaint text. Review the event timeline and any proposed action; approve or reject that specific action. Use Stop to request cancellation. Read the final verdict and recovery state as limited to the checks actually performed.
-
-For a clearly labeled synthetic browser run, see the fixture instructions in [Member 3 setup notes](docs/MEMBER_3_SETUP.md). Do not interpret it as real inference or Windows repair evidence.
+Connect, select a permitted target, describe a complaint and choose diagnose/repair mode. Local is default. Review the timeline and approve/reject only the action shown. Approval freshness is five seconds; stale actions require a new run. Stop requests cooperative cancellation. Interpret verdicts against the listed checks and recovery state.
 
 ## Challenges and Learnings
 
-The backend and UI can be developed without a local model or Windows VM by injecting test providers and executors. That keeps interface and policy tests available while live integration is pending. The work also makes clear that consent, action approval, fresh target checks, deterministic verification, and recovery are separate responsibilities; a successful API request or tool call cannot stand in for measured repair evidence.
+CPU inference can outlast freshness, requiring post-inference rebinding that preserves target identity/geometry. Repeated guest PowerShell startup can consume the approval window; persistent transport addresses overhead while keeping policy strict. Explicit fixtures permit API testing without a model/VM, but cannot establish real troubleshooting success. Original-symptom verification is separate from service/control state.
 
 ## Devpost Submission
 
-**Devpost Project:** N/A; no submission link or acceptance record is present in this repository. Confirm the event's required submission route before submitting. No submission is claimed.
+**Devpost Project:** N/A; no verified submission link or acceptance receipt is recorded. The template includes Devpost fields while earlier event notes mention OrganizerHQ. The team must confirm the actual route. No publication/submission is claimed.
 
 ## Credits and License
 
-### Credits
-
-- The README structure follows the member-provided hackathon project template: [Hacktoberfest Hack Day Coimbatore template repository](https://github.com/BIJJUDAMA/hacktoberfest-hack-day-coimbatore-x-init-club-and-idea-club). The template's application code was not copied.
-- The hosted Gemma adapter follows Google's [Gemma with the Gemini API documentation](https://ai.google.dev/gemma/docs/core/gemma_on_gemini_api).
-- FastAPI, Uvicorn, HTTPX, and the other pinned packages are external dependencies; their own notices and licenses apply.
-
-### License
-
-[MIT License](LICENSE) for this repository's application code. This does not change the terms for model weights, external services, Windows, or third-party dependencies.
+README structure follows the supplied [Hacktoberfest Hack Day Coimbatore template](https://github.com/BIJJUDAMA/hacktoberfest-hack-day-coimbatore-x-init-club-and-idea-club); its application code was not copied. Hosted transport follows Google's Gemma API documentation. External runtimes/models retain their own terms. Application code uses [MIT License](LICENSE).
 
 ## Submission Checklist
 
-- [x] Project title, description, team names, problem, solution, architecture, and stack documented.
-- [x] Member 3 setup and synthetic validation documented.
-- [x] Limitations and unverified integrations identified.
-- [ ] Confirm actual contributions and evidence from Members 1, 2, and 4.
-- [ ] Run real hosted Gemma inference with an authorized key/account.
-- [ ] Integrate and test the local Gemma provider and native Windows executor.
-- [ ] Record a verified Windows workflow and recovery evidence.
-- [ ] Add a demo video and submission link if required and provided.
-- [ ] Confirm the current submission route and acceptance with the team.
+- [x] Four names and completed role-based contributions recorded.
+- [x] Fresh provider, native tools, API/UI and packaging integrated on Member 3's branch.
+- [x] 196 Python and 5 web tests passed, with simulations identified.
+- [x] Real model/native guest harness evidence recorded with limits.
+- [x] Repository private; remaining work described honestly.
+- [ ] Team review/agreement to merge PR #1 into main.
+- [ ] Authenticated API/UI guest run and persistent-worker guest timing.
+- [ ] Real symptom verification and recovery workflow before enabling desktop repairs.
+- [ ] Capture/vision integration and hosted live inference if included in demo scope.
+- [ ] Reconcile Member 4's older contribution/demo/checklist documents with current results.
+- [ ] Supply any required fresh recording and verified submission receipt.
+- [ ] Team lead explicitly authorizes publication if required.
+
+[validation]: https://github.com/Team-DROS/TroubleShoot/blob/3290250/docs/MEMBER_3_VALIDATION.md
+[setup]: https://github.com/Team-DROS/TroubleShoot/blob/3290250/docs/MEMBER_3_SETUP.md
+[local-evidence]: https://github.com/Team-DROS/TroubleShoot/blob/3290250/docs/evidence/local-model/INTEGRATION_MEMBER3.md
+[guest-evidence]: https://github.com/Team-DROS/TroubleShoot/blob/3290250/docs/VALIDATION.md
