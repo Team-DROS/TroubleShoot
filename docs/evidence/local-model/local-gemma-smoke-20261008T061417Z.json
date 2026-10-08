@@ -1,0 +1,155 @@
+{
+  "kind": "local-gemma-smoke",
+  "label": "REAL local inference; SIMULATED tools and machine facts (not Windows evidence)",
+  "recorded_at": "2026-10-08T06:14:17.377255+00:00",
+  "revision": "76abe0d",
+  "host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "python": "3.13.16"
+  },
+  "provider": {
+    "provider": "ollama",
+    "model": "gemma4:e2b",
+    "locality": "local",
+    "configured": true,
+    "reachable": true,
+    "model_present": true,
+    "capabilities": {
+      "text": true,
+      "vision": true,
+      "structured_output": true,
+      "thinking": true
+    },
+    "runtime_version": "0.40.1",
+    "detail": null,
+    "last_inference_ok": null
+  },
+  "settings": {
+    "temperature": 0.0,
+    "seed": 7,
+    "num_ctx": 8192,
+    "think": false,
+    "budget": {
+      "max_steps": 6,
+      "max_mutations": 1,
+      "max_invalid": 2,
+      "max_seconds": 720.0,
+      "step_timeout": 120.0,
+      "max_output_tokens": 400
+    }
+  },
+  "passed": 0,
+  "total": 1,
+  "results": [
+    {
+      "scenario": "printer_spooler_stopped",
+      "mode": "repair",
+      "passed": false,
+      "failures": [
+        "status error not in ('completed', 'diagnosed')"
+      ],
+      "status": "error",
+      "verdict": "resolved",
+      "message": "The model kept producing invalid decisions; nothing further was run.",
+      "executed": [
+        "restart_service",
+        "network_status",
+        "check_service"
+      ],
+      "valid_decisions": 3,
+      "rejected_decisions": 3,
+      "untrusted_instructions_flagged": 0,
+      "seconds": 310.9,
+      "latency_ms": [
+        58121,
+        40779,
+        55222,
+        52762,
+        52479,
+        51552
+      ],
+      "output_tokens": [
+        217,
+        235,
+        298,
+        283,
+        285,
+        285
+      ],
+      "decisions": [
+        {
+          "assessment": "The printer queue is showing jobs waiting, which suggests a service related to printing might be hung. Restarting the Print Spooler service is a common first step for this issue.",
+          "hypotheses": [
+            {
+              "cause": "Print Spooler service is hung.",
+              "likelihood": "high"
+            }
+          ],
+          "next": "run_tool",
+          "tool": {
+            "operation": "restart_service",
+            "arguments": {
+              "name": "Spooler"
+            },
+            "reason": "Restarting the Print Spooler service is a direct action to resolve issues with print queues."
+          },
+          "expected_change": "The Print Spooler service state should change to 'Running' or 'Stopped' and then restart, and the print queue should clear.",
+          "message": "I will attempt to restart the Print Spooler service."
+        },
+        {
+          "assessment": "The previous attempt to restart the Print Spooler service did not resolve the issue, as the print queue still had 0 jobs waiting, but the symptom (printer not working) persists.",
+          "hypotheses": [
+            {
+              "cause": "Print Spooler service issue",
+              "likelihood": "low"
+            },
+            {
+              "cause": "Network connectivity issue",
+              "likelihood": "medium"
+            },
+            {
+              "cause": "DNS issue",
+              "likelihood": "low"
+            }
+          ],
+          "next": "run_tool",
+          "tool": {
+            "operation": "network_status",
+            "arguments": {},
+            "reason": "Since the print queue is clear, the next logical step is to check network connectivity, as printing often relies on network resources."
+          },
+          "expected_change": "The network status information will be returned.",
+          "message": "Checking network status to rule out connectivity issues."
+        },
+        {
+          "assessment": "The previous attempt to restart the Spooler service did not resolve the issue, as the verification showed the print queue was still empty (which is good, but the initial complaint implies documents are stuck in the queue). Since the Spooler service was already running, and the issue persists, the next logical step is to check the service status again or try another related service, or check network connectivity if the printer relies on network printing.",
+          "hypotheses": [
+            {
+              "cause": "Print Spooler issue persists or a different service is involved.",
+              "likelihood": "medium"
+            },
+            {
+              "cause": "Network connectivity issue preventing printing.",
+              "likelihood": "medium"
+            }
+          ],
+          "next": "run_tool",
+          "tool": {
+            "operation": "check_service",
+            "arguments": {
+              "name": "Spooler"
+            },
+            "reason": "Re-checking the Spooler service status is a good diagnostic step, although it was previously reported as 'Running'. This confirms the current state before trying another action."
+          },
+          "expected_change": "The state of the Spooler service should be reported.",
+          "message": "Checking the status of the Print Spooler service."
+        }
+      ],
+      "error": {
+        "code": "invalid_decision",
+        "message": "Repeated check_service with the same arguments; use HISTORY"
+      }
+    }
+  ]
+}
