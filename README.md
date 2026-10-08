@@ -1,339 +1,204 @@
-# TroubleShoot — Team DROS
+# TroubleShoot
 
-> A local-first Windows troubleshooting assistant being built with Gemma 4,
-> bounded terminal / computer-use actions, explicit per-action approval,
-> fresh postcondition verification and recovery.
-
-**Build date:** 8 October 2026 — fresh repository, no earlier prototype imported.
-**Current state:** shared contract validation + 16 unit tests ✅ — runtime pending ⏳
-**Repository:** private until explicit team authorization.
-
----
+> A local-first Windows troubleshooting assistant that helps people investigate a problem, review a proposed action, and check whether the symptom changed.
 
 ## Team
 
-**Team name:** Team DROS
+**Team Name:** DROS
 
-Member names are pending team confirmation; role slots are placeholders.
-Completed contributions are recorded in [docs/CONTRIBUTIONS.md](docs/CONTRIBUTIONS.md).
+| Member | Contribution recorded in this repository |
+| --- | --- |
+| Pranesh Subramanian (Member 1) | Assigned: Windows tools, selected-window interaction, and Windows guest validation. Completed work is not verified in this checkout. |
+| Umasuthan Palaniappan (Member 2) | Assigned: local Gemma provider and agent reasoning. Completed work is not verified in this checkout. |
+| Srinath Balakrishnan (Member 3) | Implemented the shared contracts, backend API/session flow, hosted Gemma adapter, minimal UI, packaging, setup documentation, and synthetic tests on `member-3/backend-hosted-api`. |
+| Sanjeev Singotam (Member 4) | Assigned: project documentation, demo preparation, and submission checklist. Completed work is not verified in this checkout. |
 
-| Role | Available hardware | Branch | Assignment |
-|---|---|---|---|
-| Member 1 | Local Gemma 4 + Windows VM | `member-1/windows-desktop-vm` | Windows executor, selected-window computer use, guest validation |
-| Member 2 | Local Gemma 4 only | `member-2/local-gemma-agent` | Local Ollama provider, agent reasoning, local evidence |
-| Member 3 | No local model / VM | `member-3/backend-hosted-api` | Backend API, hosted Gemma transport, minimal UI, integration |
-| Member 4 | No local model / VM | `member-4/docs-demo-submission` | Documentation, template alignment, demo script, submission preparation |
-
-Read [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md), [AGENTS.md](AGENTS.md),
-[docs/RESTART.md](docs/RESTART.md) and [docs/CONTRACTS.md](docs/CONTRACTS.md).
-
----
+Member assignments are not proof that another branch's work has been integrated. The verified Member 3 work and limits are recorded in [validation notes](docs/MEMBER_3_VALIDATION.md).
 
 ## Problem Statement
 
-Windows users often need to interpret diagnostic output, decide on a remediation step
-and then manually verify whether the symptom is resolved. Some built-in Windows
-troubleshooters already automate narrow repairs, but they offer little visibility into
-what they are doing or why. Our goal is a **conversational, local-first assistant**
-that coordinates supported Windows tools and selected-window interaction, makes the
-action and outcome evidence visible, and keeps the user in control of every impactful
-change.
+### The Problem
+
+When a Windows application or service behaves unexpectedly, people often have to interpret diagnostic advice, decide which actions are safe, and determine whether those actions fixed the original symptom. Some Windows troubleshooters already offer automated repairs; the challenge is helping users follow a clear, controlled troubleshooting flow and see evidence of its result.
 
 ### Why We Chose This Problem
 
-Manual Windows troubleshooting is time-consuming and error-prone. We want to reduce
-that effort while retaining human control over consequential actions. Broad Windows
-support is the long-term goal; this hackathon build targets one small, demonstrable
-workflow first. We do not claim "fix any Windows problem."
-
----
+The team wants to make troubleshooting easier to follow while keeping consequential actions visible and under user control. The project is an early, limited step toward that goal; it does not claim to fix every Windows problem.
 
 ## Solution
 
-**Planned runtime flow:**
-
-1. User describes a symptom in natural language.
-2. The assistant observes relevant system facts (service state, process info, etc.).
-3. Local Gemma 4 (via Ollama) proposes a bounded, registered action.
-4. The contract layer validates the proposal — rejecting unknown operations and stale targets.
-5. The user explicitly approves the single proposed action.
-6. The Windows executor runs exactly the approved operation and immediately re-checks the symptom.
-7. The UI reports resolved / partial / unresolved with fresh evidence. Recovery is available.
-
-Local inference is the default. Text and images only leave the machine when the
-user explicitly consents to hosted Gemma inference.
+TroubleShoot is being built as a local-first assistant. Its intended flow gathers relevant evidence, asks a Gemma model for a bounded proposal, checks the proposal against registered operations, requests approval where needed, and then measures the result. A model proposal or successful tool call alone does not establish that a problem was fixed.
 
 ### Key Features
 
-| Feature | Status |
-|---|---|
-| Provider / consent / action / target contract validation | ✅ Implemented (`src/troubleshoot/contracts.py`) |
-| 16 boundary unit tests (stdlib, no install) | ✅ Implemented |
-| Local Gemma 4 diagnosis via Ollama | ⏳ Planned — Member 2 |
-| Bounded terminal action (e.g. service restart) | ⏳ Planned — Member 1 |
-| Selected-window computer use with identity checks | ⏳ Planned — Member 1 |
-| Per-action approval with expiring token | ⏳ Planned — Members 1 & 3 |
-| Fresh postcondition verification | ⏳ Planned — Member 1 |
-| Cancel / undo flow | ⏳ Planned — Members 1 & 3 |
-| Loopback backend API with SSE events | ⏳ Planned — Member 3 |
-| Minimal browser UI | ⏳ Planned — Member 3 |
-| Opt-in hosted Gemma (Google AI API) | ⏳ Planned — Member 3, if key access available |
+- Implemented: authenticated loopback API, run events, cancellation, and specific single-use approval for a proposed action.
+- Implemented: optional hosted Gemma 4 transport. The user must explicitly consent before complaint text is sent; the API key stays on the backend.
+- Implemented: minimal browser interface for diagnosis, provider status, event timeline, approval, Stop, and truthful result/recovery display.
+- Pending integration: local Gemma, native Windows tools, selected-window capture, persistent recovery, and live repair verification.
 
----
+The current launcher reports local Gemma as unavailable because its adapter is not integrated in this branch. Hosted inference requires a configured API key and successful real model access. Test fixtures are explicitly labeled synthetic and are never silently substituted for a model.
 
 ## Innovation and Differentiation
 
-Our intended distinction is **local-first conversational coordination** across both
-terminal and selected-window desktop workflows, with measured, verifiable outcomes.
-Every proposed action passes a strict allow-list check; no model output can execute
-an unregistered operation. The observation is bound to the target window's identity
-(handle, PID, process start time) and expires in five seconds — ensuring the action
-applies to the window that was inspected, not one that replaced it.
-
-We do not claim that automated Windows repair is a new idea, or that this assistant
-fixes every Windows problem.
-
----
+The intended contribution is a conversational workflow that combines model suggestions with registered operations, user approval, and fresh symptom checks. Windows already has automated troubleshooters; this project does not claim that automated repair itself is new. The integrated Windows workflow and its practical value remain to be demonstrated.
 
 ## Technical Implementation
 
 ### Architecture
 
-Proposed runtime workflow (only the shared-contract foundation currently exists):
+The Member 3 branch implements the loopback API, hosted transport, session policy, and browser interface. The local provider and native Windows executor are integration points whose owning members' work is not verified here.
 
 ```mermaid
 flowchart LR
-    UI[Browser UI\nloopback only] --> API[FastAPI loopback\nsession policy]
-    API --> Agent[Agent coordinator]
-    Agent --> Provider[Local Ollama\nor consented hosted Gemma]
-    Agent --> Proposal[Validated action\nproposal]
-    Proposal --> Gate[User approval\nexpiring token]
-    Gate --> Tools[Windows executor\nregistered ops only]
-    Tools --> Verify[Fresh symptom\npost-check]
-    Verify --> Result[Resolved / partial\n/ unresolved + recovery]
+    UI[Local browser UI] --> API[Authenticated loopback API]
+    API --> Runtime[Bounded run and approval policy]
+    Runtime --> Local[Local Gemma provider<br/>pending integration]
+    Runtime --> Hosted[Hosted Gemma<br/>optional, consented]
+    Local --> Decision[Validate registered proposal]
+    Hosted --> Decision
+    Decision --> Gate[Single-use user approval]
+    Gate --> Native[Windows executor<br/>pending integration]
+    Native --> Verify[Fresh symptom checks<br/>pending native integration]
+    Verify --> Result[Resolved, partial, or unresolved]
 ```
 
 ### Technology Stack
 
-| Category | Implemented | Planned |
-|---|---|---|
-| Language | Python 3.11+ (standard library) | — |
-| Build | setuptools ≥ 68 | — |
-| Backend API | — | FastAPI (Member 3) |
-| Local AI | — | Ollama + Gemma 4 (Members 1 & 2) |
-| Hosted AI | — | Google Gemma API, opt-in (Member 3) |
-| Windows tools | — | pywin32 / subprocess allow-list (Member 1) |
-| Browser UI | — | Minimal HTML/JS or TypeScript/React (Member 3) |
-| Database | N/A | — |
-| Infrastructure | Git, Python runtime | Windows VM (Member 1) |
+| Category | Technologies / status |
+| --- | --- |
+| Frontend | HTML, CSS, and vanilla JavaScript; local browser UI implemented |
+| Backend | Python 3.11+; FastAPI and Uvicorn loopback API implemented |
+| Database | N/A; run state and events are kept in process memory |
+| AI / ML | Hosted Gemma 4 adapter for `gemma-4-26b-a4b-it` or `gemma-4-31b-it`; real inference not yet verified. Local Gemma is assigned to Member 2 and not integrated here. |
+| Infrastructure | Local Windows development; server binds to `127.0.0.1`; no hosted application deployment or VM repair evidence |
+| APIs / Services | Google Gemini API's hosted Gemma endpoint, optional and key-gated; no real request has been verified |
 
-### How It Works (contracts layer — implemented)
+### How It Works
 
-The currently implemented `contracts.py` module enforces trust boundaries before
-any runtime component is reached:
+The API accepts a complaint and diagnosis/repair mode, reports provider readiness, and streams run events. Model output is parsed against registered operation validators. A mutation is only considered in repair mode and waits for a one-time approval bound to the run, action, arguments, target, and observation. The runtime rechecks observation freshness and target geometry before execution. Separate checks determine whether the result is resolved, partial, or unresolved.
 
-- **`RunRequest`** — validates complaint text, mode (`diagnose` / `repair`),
-  provider choice and explicit consent flags. Hosted inference requires
-  `cloud_consent=True`; hosted images additionally require `cloud_images_consent=True`.
-- **`parse_action`** — rejects payloads with unknown fields, unknown operation names,
-  and invalid per-operation arguments (via executor-supplied validators).
-- **`require_target`** — binds an action proposal to the exact window that was
-  observed (handle, PID, process-start timestamp) and checks observation freshness
-  (default 5-second window).
-- **`event`** — produces typed SSE event envelopes with allowed event kinds only.
-
-No model, executor, API or UI component exists yet.
+The API and UI are wired to injectable provider and executor interfaces. The production launcher currently has neither a working local provider nor a native Windows executor configured, so it honestly reports those capabilities as unavailable. Browser vision and screenshot transfer are not enabled. Hosted image transport code is consent-gated and covered by mocked transport tests, not integrated into the UI.
 
 ### Technical Decisions
 
-- **One provider interface** — local Ollama and hosted Gemma implement the same
-  protocol; the application never silently falls back from local to hosted.
-- **Executor authority separate from model proposals** — the model cannot cause
-  execution by producing a plausible-looking payload; the executor allow-list and
-  user approval gate are deterministic.
-- **Independent postchecks** — execution `ok` means the OS accepted the command,
-  not that the symptom is resolved. A separate fresh observation determines verdict.
-- **Standard library only (current)** — the contracts module and tests require only
-  Python 3.11+ and no installation step.
-
----
+- Local Gemma is the intended default; hosted Gemma is optional and requires explicit text-sharing consent. Image consent is separate.
+- The model may propose a registered action, but deterministic validation and user approval control whether a mutation runs.
+- Diagnose mode cannot perform registered mutating operations. A new observation is checked immediately before execution, and stale or changed targets fail closed.
+- Completion distinguishes resolved, partial, unresolved, cancelled, and error outcomes. Execution success alone is not repair success.
+- Development fixtures are synthetic and visibly labeled. Missing model credentials or providers produce errors instead of mock inference or silent fallback.
+- This is a single-user loopback development application, not a hardened remote service. Run state and recovery indicators are in memory; persistent recovery is not implemented.
 
 ## Implementation During the Hackathon
 
-Work started from a fresh private repository on 8 October 2026.
-No source code, test, prompt, manifest, UI or compiled artifact from the team's
-earlier prototype has been imported. See [docs/PROVENANCE.md](docs/PROVENANCE.md).
+The Member 3 branch contains newly authored backend, hosted-provider transport, browser UI, packaging, contracts, setup documentation, and fixture-based validation. The full suite passed with **52 Python tests and 5 JavaScript UI tests**. The browser smoke check used a synthetic target and returned **unresolved**; it did not demonstrate a live Windows repair or real model inference. See [Member 3 validation notes](docs/MEMBER_3_VALIDATION.md) and [setup and limitations](docs/MEMBER_3_SETUP.md).
 
-### What was built today
-
-- Fresh planning documents and hardware-specific responsibilities.
-- Shared contract module (`src/troubleshoot/contracts.py`) — 150 lines, stdlib only.
-- 16 boundary unit tests (`tests/unit/test_contracts.py`) — all passing.
-- Synthetic inspection fixture (`docs/fixtures/inspect_target.json`) — labeled not live.
-- Member role and branch realignment.
-- Member 4 documentation: ATTRIBUTION, CONTRIBUTIONS, DEMO_SCRIPT, SUBMISSION_CHECKLIST, TEMPLATE_GUIDE, CLAUDE updates.
+This repository's provenance notes state that the implementation was started afresh after the team withdrew permission to reuse its earlier prototype. No earlier application source or Git history was imported. This is not a claim that the team had no prior prototype or prior experience.
 
 ### Team Contributions
 
-See [docs/CONTRIBUTIONS.md](docs/CONTRIBUTIONS.md) for the complete record.
-Individual names are pending team confirmation; role slots are used as placeholders.
-Assigned work is not a contribution claim — only completed and merged work is recorded.
-
----
+- **Pranesh Subramanian:** assigned the Windows executor, desktop interaction, and guest validation. The contribution and results need confirmation from Member 1's branch.
+- **Umasuthan Palaniappan:** assigned the local Gemma provider and agent reasoning. The contribution and inference evidence need confirmation from Member 2's branch.
+- **Srinath Balakrishnan:** Member 3 backend/API, session approvals and cancellation, hosted Gemma adapter, browser UI, shared contracts, packaging, documentation, and synthetic validation, as recorded on this branch.
+- **Sanjeev Singotam:** assigned documentation, demo preparation, and submission support. The contribution needs confirmation from Member 4's branch.
 
 ## Working Application
 
-**Live application:** N/A — no running application exists yet.
+**Live Application:** N/A. The application is a local Windows program; there is no public deployment. The UI can be started locally using the instructions below. In the current checkout, providers are unavailable unless hosted Gemma credentials are configured; the local provider and Windows executor still require integration.
 
-The target is a local Windows application. It is not a web service; native-control
-endpoints must not be exposed publicly. Judging access will be documented as a
-local-install walkthrough once the application is implemented and verified.
-
-See [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) for the planned demo flow and
-evidence placeholders awaiting Members 1–3.
-
----
+The included synthetic browser fixture demonstrates event display and an honest unresolved result only. It does not change the host or verify a Windows repair.
 
 ## Demo Video
 
-**Demo video:** pending — none recorded or uploaded for this fresh project.
-
-Member 4 has prepared a [structured demo script](docs/DEMO_SCRIPT.md).
-Actual recorded evidence from Members 1–3 is needed before a video can be produced.
-No old prototype footage will be reused.
-
-Link will be added here when authorized recording is available:
-> `[Demo recording — pending]`
-
----
+**Demo Video:** Not recorded or provided in this repository.
 
 ## Open Source and AI Usage
 
 ### AI / Models
 
-| Model / tool | Role | Status |
-|---|---|---|
-| Gemma 4 via local Ollama | Primary inference (local-first) | Planned — tag TBD by Member 2 |
-| Gemma via Google AI API | Opt-in hosted inference | Planned — requires explicit consent + key |
-| AI coding assistants | Development assistance | Used by team members for fresh authorship |
-
-Gemma weights are subject to the [Gemma Terms of Use](https://ai.google.dev/gemma/terms),
-separate from this application's MIT license.
-No model inference is claimed for the current module.
-All AI-assisted code was reviewed and committed by the responsible member.
+- **Gemma 4 hosted API:** the backend adapter supports the documented Gemma 4 IDs `gemma-4-26b-a4b-it` and `gemma-4-31b-it`. A real API key, account availability, and successful inference have not been verified. Selecting hosted mode requires explicit consent for sending complaint text to Google's API.
+- **Local Gemma 4:** intended as the default provider, but its adapter is not present in this branch and no local inference is claimed.
 
 ### Open Source Components
 
-| Component | License | Role |
-|---|---|---|
-| Python 3.11+ | PSF-2.0 | Runtime language (system install) |
-| setuptools ≥ 68 | MIT | Build backend |
-| FastAPI (planned) | MIT | Backend API server |
-| Ollama (planned) | MIT | Local model runtime |
+- **FastAPI:** backend HTTP API.
+- **Uvicorn:** local ASGI server.
+- **HTTPX:** bounded hosted API transport and mocked transport tests.
+- **Setuptools:** Python package build configuration.
+- **Dataset:** N/A; no dataset is included or used by the implemented tests.
 
-See [docs/ATTRIBUTION.md](docs/ATTRIBUTION.md) for the full component list and notices.
-No dataset is used. No model has been fine-tuned.
-
----
+The application code is distributed under the repository's MIT License. External packages and model/API terms remain subject to their respective upstream licenses and terms. See [Google's Gemma API guide](https://ai.google.dev/gemma/docs/core/gemma_on_gemini_api) for the hosted Gemma integration reference.
 
 ## Setup and Usage
 
 ### Prerequisites
 
-- Python 3.11+ and Git (all members).
-- Local Gemma 4 via Ollama — required only for Members 1 and 2's runtime work.
-- Windows VM — required only for Member 1's guest validation work.
-- Member 4 needs only Git, a text editor and a browser.
+- Git.
+- Python 3.11 or later.
+- Node.js for the JavaScript UI behavior tests (not needed to run the UI).
+- A hosted Gemma API key only if you want to try hosted inference; no key is included.
 
-### Installation (current — contracts and tests only)
-
-```powershell
-git clone https://github.com/Team-DROS/TroubleShoot.git TroubleShoot-Event
-cd TroubleShoot-Event
-git switch member-4/docs-demo-submission   # or your assigned branch
-```
-
-No package installation is needed for the current standard-library tests.
-
-### Running the Contract Tests
+### Installation
 
 ```powershell
-$env:PYTHONPATH = Join-Path (Get-Location) 'src'
-python -m unittest discover -s tests/unit -v
+git clone https://github.com/Team-DROS/TroubleShoot.git
+cd TroubleShoot
+git switch member-3/backend-hosted-api
+python -m venv .venv
+.\.venv\Scripts\python -m pip install -r requirements.lock
 ```
-
-Expected: 16 tests, all OK.
 
 ### Environment Variables
 
-`PYTHONPATH=src` is needed for test discovery.
-Runtime provider / API / key variables are not implemented yet.
-Member 3 will document them and add a **placeholder-only** `.env.example` when they work.
-**Credentials must never be committed to source control or included in frontend bundles.**
+Set `GEMMA_API_KEY` in the backend environment to enable hosted inference. Optionally set `GEMMA_API_MODEL` to `gemma-4-26b-a4b-it` or `gemma-4-31b-it`. `TROUBLESHOOT_SESSION_TOKEN` optionally sets the local session token; if unset, the launcher generates one. Never commit API keys or place them in browser code. `.env.example` contains placeholders; the app does not automatically load a `.env` file.
 
-### Running the Application
+### Running the Project
 
-No application startup command exists yet. The above test command is the only
-runnable entry point at this time.
+```powershell
+.\scripts\start.ps1
+```
 
----
+Open `http://127.0.0.1:8765` and enter the local session token printed by the launcher. The server binds only to loopback. See [Member 3 setup notes](docs/MEMBER_3_SETUP.md) for hosted configuration, packaging, and current limitations.
+
+To run the automated checks:
+
+```powershell
+.\scripts\test.ps1
+```
+
+### Usage
+
+Connect with the local session token, describe a symptom, select a mode and provider, and start a run. For hosted mode, explicitly consent before sending complaint text. Review the event timeline and any proposed action; approve or reject that specific action. Use Stop to request cancellation. Read the final verdict and recovery state as limited to the checks actually performed.
+
+For a clearly labeled synthetic browser run, see the fixture instructions in [Member 3 setup notes](docs/MEMBER_3_SETUP.md). Do not interpret it as real inference or Windows repair evidence.
 
 ## Challenges and Learnings
 
-- The hardware split now matches actual constraints: API and UI development can
-  proceed with injected fixtures and hosted access where available, while live
-  guest tests remain with the VM owner.
-- Capability validation, consent, observation freshness and execution approval
-  must be separate, independently verifiable stages — not one combined check.
-- Building from scratch under a tight deadline requires clear interface contracts
-  before any runtime component is wired.
-- The distinction between "execution returned OK" and "the symptom is resolved"
-  is critical for honest reporting and requires an independent postcheck.
-
----
+The backend and UI can be developed without a local model or Windows VM by injecting test providers and executors. That keeps interface and policy tests available while live integration is pending. The work also makes clear that consent, action approval, fresh target checks, deterministic verification, and recovery are separate responsibilities; a successful API request or tool call cannot stand in for measured repair evidence.
 
 ## Devpost Submission
 
-**Status:** Not submitted.
-
-The user-supplied template includes a Devpost demo-video field; the earlier event
-snapshot identifies OrganizerHQ. Member 4 records this difference in
-[docs/TEMPLATE_GUIDE.md](docs/TEMPLATE_GUIDE.md) and will update once the team
-confirms the current required route. No portal completion is implied by this
-placeholder. See [docs/SUBMISSION_CHECKLIST.md](docs/SUBMISSION_CHECKLIST.md).
-
----
+**Devpost Project:** N/A; no submission link or acceptance record is present in this repository. Confirm the event's required submission route before submitting. No submission is claimed.
 
 ## Credits and License
 
-Documentation structure informed by the
-[user-supplied hackathon template](https://github.com/BIJJUDAMA/hacktoberfest-hack-day-coimbatore-x-init-club-and-idea-club)
-(revision `6d3765e3c5adb7ad708dfc4593b5365001d36d55`, inspected 8 October 2026).
-See [docs/TEMPLATE_GUIDE.md](docs/TEMPLATE_GUIDE.md). No application code from
-that template has been copied.
+### Credits
 
-Application code: **MIT License** — see [LICENSE](LICENSE).
-Model weights and Windows installation media retain their own license terms.
-See [docs/ATTRIBUTION.md](docs/ATTRIBUTION.md) for full component and AI-usage notices.
+- The README structure follows the member-provided hackathon project template: [Hacktoberfest Hack Day Coimbatore template repository](https://github.com/BIJJUDAMA/hacktoberfest-hack-day-coimbatore-x-init-club-and-idea-club). The template's application code was not copied.
+- The hosted Gemma adapter follows Google's [Gemma with the Gemini API documentation](https://ai.google.dev/gemma/docs/core/gemma_on_gemini_api).
+- FastAPI, Uvicorn, HTTPX, and the other pinned packages are external dependencies; their own notices and licenses apply.
 
----
+### License
+
+[MIT License](LICENSE) for this repository's application code. This does not change the terms for model weights, external services, Windows, or third-party dependencies.
 
 ## Submission Checklist
 
-| Item | Status |
-|---|---|
-| Project goal, architecture, hardware-specific role split documented | ✅ |
-| Fresh repository provenance recorded | ✅ |
-| Shared-contract module and 16 unit tests authored and passing | ✅ |
-| Member 4 documentation deliverables (ATTRIBUTION, CONTRIBUTIONS, DEMO_SCRIPT, checklists) | ✅ |
-| Real member names confirmed | ⏳ Pending |
-| Windows executor implemented and guest-tested (Member 1) | ⏳ Pending |
-| Local Gemma adapter implemented and evidence recorded (Member 2) | ⏳ Pending |
-| Backend API and UI implemented (Member 3) | ⏳ Pending |
-| Integration: local-first path wired end-to-end | ⏳ Pending |
-| Demo recording with newly verified evidence | ⏳ Pending |
-| Submission portal and route confirmed | ⏳ Pending |
-| Public release explicitly authorized | 🔒 Not yet |
-| Accepted submission with receipt saved | ❌ Not submitted |
-
-Repository remains **private** until explicit user instruction.
+- [x] Project title, description, team names, problem, solution, architecture, and stack documented.
+- [x] Member 3 setup and synthetic validation documented.
+- [x] Limitations and unverified integrations identified.
+- [ ] Confirm actual contributions and evidence from Members 1, 2, and 4.
+- [ ] Run real hosted Gemma inference with an authorized key/account.
+- [ ] Integrate and test the local Gemma provider and native Windows executor.
+- [ ] Record a verified Windows workflow and recovery evidence.
+- [ ] Add a demo video and submission link if required and provided.
+- [ ] Confirm the current submission route and acceptance with the team.
