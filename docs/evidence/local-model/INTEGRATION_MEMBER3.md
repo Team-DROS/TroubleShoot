@@ -21,3 +21,11 @@ With Member 3's `requirements.lock` installed, the combined tree passed Member 2
 `member3-rebind-after-inference.patch`: after the decision, re-observe the selected target, require the same identity, bounds and DPI, and bind the proposal to that new observation before approval. A changed target still fails closed. The only test change is the expected observation count (2 → 3). All 29 API tests pass with it.
 
 Still open for Member 3: after approval, the runtime re-observes but checks freshness against the pre-approval observation. A human approval longer than 5 s therefore expires the action. The same rebind pattern would fix it, if the team accepts it within the approval policy.
+
+## Re-check on Member 3's integrated branch (`769e895`)
+
+Member 3 merged Member 2's work up to `41b1c9b`, applied a freshness fix and wired `local_adapter_from_env()`. Tested with Member 2's later adapter (`000c1b4`) copied in, using the same live script and simulated executor:
+
+- A cold model load plus one CPU decision hit the earlier 80 s adapter limit (`local_timeout`). With the 150 s default from `000c1b4`, the run completed: Gemma proposed `start_spooler` (76.3 s, 195 tokens) → approval → action `ok` → fresh check passed → verdict `resolved`.
+- Unit tests (except two Member 1 Windows-only worker tests that need PowerShell) and all 29 API tests pass on that tree.
+- Member 3 still needs to merge Member 2's commits after `41b1c9b` (mouse operation schemas and the timeout change).

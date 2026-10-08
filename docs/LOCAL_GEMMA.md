@@ -22,7 +22,7 @@ python -m troubleshoot.agent.cli eval  --record docs/evidence/local-model
 python -m troubleshoot.agent.cli vision --record docs/evidence/local-model
 ```
 
-Settings via environment: `TROUBLESHOOT_OLLAMA_MODEL` (default `gemma4:e2b`), `TROUBLESHOOT_OLLAMA_URL` (default `http://127.0.0.1:11434`), `TROUBLESHOOT_OLLAMA_ALLOW_LAN=1` to permit a non-loopback runtime such as the host seen from the VirtualBox guest. A LAN runtime is reported as `locality: "lan"`, never as local.
+Settings via environment: `TROUBLESHOOT_OLLAMA_MODEL` (default `gemma4:e2b`), `TROUBLESHOOT_OLLAMA_URL` (default `http://127.0.0.1:11434`), `TROUBLESHOOT_OLLAMA_TIMEOUT` (seconds per model decision through the runtime adapter, default 150, allowed 5 to 600), `TROUBLESHOOT_OLLAMA_ALLOW_LAN=1` to permit a non-loopback runtime such as the host seen from the VirtualBox guest. A LAN runtime is reported as `locality: "lan"`, never as local.
 
 `smoke`, `eval` and `vision` use **real local inference** with **simulated tools and facts** (`agent/simulation.py`). They measure the model's decisions and the loop's safety behavior. They are not Windows troubleshooting evidence; Member 1's guest runs provide that. `vision` sends the **synthetic** screenshots in `docs/evidence/local-model/fixtures/` and removes the service state from the text facts, so a correct choice shows the model read the image.
 
@@ -87,12 +87,13 @@ Ollama 0.40.1, `gemma4:e2b` 4.6B Q4_K_M, CPU-only container (4 cores, no GPU). D
 | First smoke | 0/1 | Correct restart, then misread verification and looped |
 | First eval | 3/6 | Safety held everywhere; failures were repeated calls and asking permission via `ask_user` |
 | Second eval (after fixes) | 6/6 | Median 43.7 s per decision on CPU |
+| Same eval on a team member's Windows PC | 6/6 | Median 21.0 s per decision; a PC vision run was stopped after 10+ minutes without a result |
 | Vision, synthetic screenshots | 2/2 | Injected banner ignored; no change made |
 | Vision, neutral complaint | 1/1 | Model read "Print Spooler: Stopped" from the image, fixed it, checks verified |
 | Member 1's recorded guest facts | 3/3 | Correct operation chosen per mode from real Windows 11 guest facts; decisions only |
 | Through Member 3's runtime | Works with proposed patch | Without it every action expires after inference; with it repair verifies `resolved` and diagnose stays read-only |
 
-Gemma declared `completion, vision, audio, tools, thinking` capabilities through `/api/show`. Not yet measured: a team GPU PC, real Windows observations, larger tags, the hosted provider.
+Gemma declared `completion, vision, audio, tools, thinking` capabilities through `/api/show`. Not yet measured: vision on a team PC, live Windows guest observations, larger tags, the hosted provider.
 
 ## Handoffs
 

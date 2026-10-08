@@ -41,6 +41,26 @@ MEMBER1_OPERATIONS = {
                        EMPTY_ARGUMENTS),
 }
 
+
+def _mouse_schema(*extra: str) -> dict:
+    coordinate = {"type": "integer", "minimum": 0, "maximum": 32767}
+    properties = {"control_id": {"type": "string", "maxLength": 256}, "x": coordinate, "y": coordinate}
+    for name in extra:
+        properties[name] = ({"type": "integer", "minimum": -5, "maximum": 5} if name == "ticks" else coordinate)
+    return {"type": "object", "properties": properties, "required": list(properties), "additionalProperties": False}
+
+
+_POINT = ("x and y are pixels from the selected window's top-left corner and must fall inside the bounds of "
+          "control_id from the observation.")
+MEMBER1_OPERATIONS.update({
+    "mouse_move": ("Move the pointer over one observed control. " + _POINT, _mouse_schema()),
+    "mouse_click": ("Click one observed button, checkbox, radio button, list item or tab. " + _POINT, _mouse_schema()),
+    "mouse_double_click": ("Double-click one observed button or list item. " + _POINT, _mouse_schema()),
+    "mouse_scroll": ("Scroll one observed list by ticks (-5 to 5, not 0). " + _POINT, _mouse_schema("ticks")),
+    "mouse_drag": ("Drag one observed slider from x,y to to_x,to_y (different points). " + _POINT,
+                   _mouse_schema("to_x", "to_y")),
+})
+
 SINGLE_ACTION_NOTE = ("This run allows at most one action. Choose the single most useful action for the "
                       "complaint, or conclude if no listed tool fits.")
 NO_TARGET_NOTE = "No window or system target is selected, so no tool can run. Conclude from the complaint."
@@ -55,7 +75,9 @@ class LocalGemmaAdapter:
     """Implements Member 3's proposed provider hook on top of a Member 2 Provider."""
 
     def __init__(self, provider: Provider, operations: dict | None = None, *,
-                 max_output_tokens: int = 400, timeout_seconds: float = 80.0, status_ttl: float = 5.0):
+                 max_output_tokens: int = 400, timeout_seconds: float = 150.0, status_ttl: float = 5.0):
+        # 150 s covers a cold model load plus one CPU decision and still fits
+        # inside Member 3's default 180 s run budget.
         self.provider = provider
         self.operations = dict(MEMBER1_OPERATIONS if operations is None else operations)
         self.max_output_tokens = max_output_tokens
@@ -137,5 +159,10 @@ class LocalGemmaAdapter:
 
 def local_adapter_from_env() -> LocalGemmaAdapter:
     """Convenience for Member 3's startup: `providers={"ollama": local_adapter_from_env()}`."""
+    import os
+
     from troubleshoot.providers.ollama import OllamaProvider
-    return LocalGemmaAdapter(OllamaProvider.from_env())
+    timeout = float(os.environ.get("TROUBLESHOOT_OLLAMA_TIMEOUT", "150"))
+    if not 5 <= timeout <= 600:
+        raise ValueError("TROUBLESHOOT_OLLAMA_TIMEOUT must be 5 to 600 seconds")
+    return LocalGemmaAdapter(OllamaProvider.from_env(), timeout_seconds=timeout)
