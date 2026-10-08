@@ -79,6 +79,8 @@ try {
     finally{[TSMouseTestKeys]::StopLock()}
     $r=Act 'mouse_click' 'Toggle cover';Start-Sleep -Milliseconds 100
     $before=Observe
+    Denied 'covered_point' 'mouse_click' @{snapshot=$before;control=$button;arguments=$args} 'point_occluded'
+    $r=Act 'mouse_click' 'Toggle cover';Start-Sleep -Milliseconds 100
     $r=Act 'mouse_click' 'Arm cancellation'
     $before=Observe;$button=Control $before 'Count clicks';$p=Point $before $button
     $args=@{control_id=$button.control_id;x=$p.x;y=$p.y}
@@ -86,9 +88,6 @@ try {
     Denied 'cancel_between_clicks' 'mouse_double_click' @{snapshot=$before;control=$button;arguments=$args;cancel_file=$midCancel} 'mouse_input_cancelled'
     $after=Observe
     $checks.Add(@{case='cancel_prevents_second_click';passed=(@($after.controls|Where-Object {$_.name -eq 'Clicks: 4'}).Count -eq 1)})
-    $before=Observe
-    Denied 'covered_point' 'mouse_click' @{snapshot=$before;control=$button;arguments=$args} 'point_occluded'
-    $r=Act 'mouse_click' 'Toggle cover';Start-Sleep -Milliseconds 100
     $before=Observe
     $cancel=Join-Path $directory 'cancel';[IO.File]::WriteAllText($cancel,'cancel')
     Denied 'cancel_before_input' 'mouse_click' @{snapshot=$before;control=$button;arguments=$args;cancel_file=$cancel} 'mouse_input_cancelled'
