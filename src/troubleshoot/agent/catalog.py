@@ -55,9 +55,11 @@ class Catalog:
         """Mapping for contracts.parse_action, restricted to the mode."""
         return {t.name: t.validator for t in self.available(mode)}
 
-    def describe(self, mode: str) -> str:
+    def describe(self, mode: str, allow_mutation: bool = True) -> str:
         lines = []
         for t in self.available(mode):
+            if t.mutates and not allow_mutation:
+                continue
             kind = "CHANGES SYSTEM, needs approval" if t.mutates else "read-only"
             args = json.dumps(t.arguments.get("properties", {}), separators=(",", ":"))
             lines.append(f"- {t.name} ({kind}): {t.description} Arguments: {args}")

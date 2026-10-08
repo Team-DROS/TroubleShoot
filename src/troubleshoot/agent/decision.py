@@ -11,7 +11,7 @@ NEXT_STEPS = ("run_tool", "conclude", "ask_user")
 LIKELIHOOD = ("high", "medium", "low")
 KEYS = {"assessment", "hypotheses", "next", "tool", "expected_change", "message"}
 TOOL_KEYS = {"operation", "arguments", "reason"}
-MAX_TEXT = 600
+MAX_TEXT = 400
 MAX_HYPOTHESES = 3
 
 
@@ -56,30 +56,35 @@ def _nullable(schema):
     return {"anyOf": [schema, {"type": "null"}]}
 
 
-def decision_schema(catalog: Catalog, mode: str) -> dict:
+def decision_schema(catalog: Catalog, mode: str, allow_mutation: bool = True,
+                    conclude_only: bool = False) -> dict:
     """JSON schema passed to the runtime for constrained decoding.
 
     Each available tool becomes its own branch, so the operation name and its
     argument shape are tied together and unknown operations cannot be emitted.
+    After the change budget is used, mutating tools disappear; after a verified
+    fix, only `conclude` remains.
     """
+    tools = [] if conclude_only else [t for t in catalog.available(mode) if allow_mutation or not t.mutates]
     branches = [{
         "type": "object",
         "properties": {"operation": {"type": "string", "enum": [tool.name]},
-                       "arguments": tool.arguments, "reason": _string(300)},
+                       "arguments": tool.arguments, "reason": _string(160)},
         "required": ["operation", "arguments", "reason"],
         "additionalProperties": False,
-    } for tool in catalog.available(mode)]
+    } for tool in tools]
+    steps = ["conclude"] if conclude_only else list(NEXT_STEPS)
     return {
         "type": "object",
         "properties": {
-            "assessment": _string(),
+            "assessment": _string(300),
             "hypotheses": {"type": "array", "maxItems": MAX_HYPOTHESES, "items": {
                 "type": "object",
-                "properties": {"cause": _string(200), "likelihood": {"type": "string", "enum": list(LIKELIHOOD)}},
+                "properties": {"cause": _string(120), "likelihood": {"type": "string", "enum": list(LIKELIHOOD)}},
                 "required": ["cause", "likelihood"], "additionalProperties": False}},
-            "next": {"type": "string", "enum": list(NEXT_STEPS)},
+            "next": {"type": "string", "enum": steps},
             "tool": {"anyOf": [*branches, {"type": "null"}]},
-            "expected_change": _nullable(_string(300)),
+            "expected_change": _nullable(_string(200)),
             "message": _nullable(_string()),
         },
         "required": sorted(KEYS),
@@ -110,8 +115,8 @@ def parse_decision(data, catalog: Catalog, mode: str) -> Decision:
     for h in hyps:
         if not isinstance(h, dict) or set(h) != {"cause", "likelihood"} or h["likelihood"] not in LIKELIHOOD:
             raise DecisionError("Invalid hypothesis")
-        parsed_hyps.append(Hypothesis(_text(h["cause"], "hypothesis", 200), h["likelihood"]))
-    expected = _text(data["expected_change"], "expected_change", 300, optional=True)
+        parsed_hyps.append(Hypothesis(_text(h["cause"], "hypothesis", 120), h["likelihood"]))
+    expected = _text(data["expected_change"], "expected_change", 200, optional=True)
     message = _text(data["message"], "message", optional=True)
     tool = data["tool"]
     operation = arguments = reason = None
@@ -124,7 +129,7 @@ def parse_decision(data, catalog: Catalog, mode: str) -> Decision:
         if not isinstance(tool["arguments"], dict):
             raise DecisionError("Tool arguments must be an object")
         arguments = tool["arguments"]
-        reason = _text(tool["reason"], "reason", 300)
+        reason = _text(tool["reason"], "reason", 160)
         if catalog.get(operation).mutates and expected is None:
             raise DecisionError("A system change must state the expected observable change")
     else:
@@ -132,5 +137,5 @@ def parse_decision(data, catalog: Catalog, mode: str) -> Decision:
             raise DecisionError(f"{nxt} must not include a tool")
         if message is None:
             raise DecisionError(f"{nxt} requires a message")
-    return Decision(_text(data["assessment"], "assessment"), tuple(parsed_hyps), nxt,
+    return Decision(_text(data["assessment"], "assessment", 300), tuple(parsed_hyps), nxt,
                     operation, arguments, reason, expected, message)

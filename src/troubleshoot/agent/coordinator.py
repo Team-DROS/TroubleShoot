@@ -111,7 +111,7 @@ class _RunState:
         self.seen: set[str] = set()
         self.mutations = 0
         self.outcome = Outcome("error", "", mode)
-        self.schema = decision_schema(owner.catalog, mode)
+        self.run_status: list[str] = []
         self.started = owner.clock()
 
     def emit(self, kind, payload):
@@ -149,6 +149,8 @@ class _RunState:
                 self.history.append({"step": step, "rejected_decision": str(exc)})
                 self.emit("error", {"code": "invalid_decision", "message": str(exc), "recoverable": True})
                 if invalid > self.budget.max_invalid:
+                    if self.outcome.verdict is not None:
+                        return self._verified_summary()
                     return self.finish("error", "The model kept producing invalid decisions; nothing further was run.",
                                        {"code": "invalid_decision", "message": str(exc)})
                 continue
@@ -161,6 +163,8 @@ class _RunState:
             done = self._act(step, decision, proposal)
             if done is not None:
                 return done
+        if self.outcome.verdict is not None:
+            return self._verified_summary()
         return self.finish("budget_exhausted",
                            "Step or time budget reached before a conclusion.",
                            {"code": "budget_exhausted", "message": "Run stopped at its budget"})
@@ -175,17 +179,29 @@ class _RunState:
                                   "image_ref": fresh.image.ref if fresh.image else None,
                                   "untrusted_instructions": flagged})
 
+    @property
+    def allow_mutation(self) -> bool:
+        return self.mutations < self.budget.max_mutations
+
+    @property
+    def conclude_only(self) -> bool:
+        return self.outcome.verdict is not None and self.outcome.verdict.verdict == "resolved"
+
     def _request(self, fresh: FreshObservation, step: int) -> ModelRequest:
         images = ()
         if self.vision and fresh.image is not None:
             images = (fresh.image,)
         prompt = build_user_prompt(self.complaint, self.mode, self.o.catalog, fresh.facts, self.history,
-                                   self.budget.max_steps - step + 1, image_attached=bool(images))
-        return ModelRequest(SYSTEM, prompt, self.schema, images,
+                                   self.budget.max_steps - step + 1, image_attached=bool(images),
+                                   run_status=self.run_status, allow_mutation=self.allow_mutation)
+        schema = decision_schema(self.o.catalog, self.mode, self.allow_mutation, self.conclude_only)
+        return ModelRequest(SYSTEM, prompt, schema, images,
                             self.budget.max_output_tokens, self.budget.step_timeout)
 
     def _accept(self, data) -> Decision:
         decision = parse_decision(data, self.o.catalog, self.mode)
+        if self.conclude_only and decision.next != "conclude":
+            raise DecisionError("The change is verified; conclude and explain the result")
         if decision.next != "run_tool":
             return decision
         key = decision.operation + json.dumps(decision.arguments, sort_keys=True)
@@ -195,6 +211,19 @@ class _RunState:
         if tool.mutates and self.mutations >= self.budget.max_mutations:
             raise DecisionError("Change budget used; conclude from the verification result")
         return decision
+
+    def _verified_summary(self) -> Outcome:
+        """The model failed to summarise after a verified change: report the checks themselves."""
+        verdict = self.outcome.verdict
+        passed = [c.name for c in verdict.checks if c.passed]
+        failed = [c.name for c in verdict.checks if not c.passed]
+        message = f"Change verified as {verdict.verdict}."
+        if passed:
+            message += " Passed: " + ", ".join(passed) + "."
+        if failed:
+            message += " Failed: " + ", ".join(failed) + "."
+        self.outcome.limitations.append("The model did not write a final summary; this message was generated from the checks")
+        return self.finish("completed", message)
 
     def _conclude(self, decision: Decision) -> Outcome:
         if self.outcome.verdict is not None:
@@ -242,8 +271,19 @@ class _RunState:
             verdict = judge(result.status, self.hooks.postcheck(proposal, result))
             self.outcome.verdict = verdict
             self.outcome.limitations.extend(n for n in verdict.limitations if n not in self.outcome.limitations)
-            record["verification"] = verdict.to_dict()
+            record["verification"] = {"verdict": verdict.verdict, "checks": [
+                f"{c.name}: expected {c.expected}, actual {c.actual}, {'PASS' if c.passed else 'FAIL'}"
+                for c in verdict.checks]}
             record["expected_change"] = decision.expected_change
+            self.run_status.append(f"Change made: {proposal.operation} {json.dumps(proposal.arguments)}. "
+                                   f"Fresh checks verdict: {verdict.verdict.upper()}.")
+            if verdict.verdict == "resolved":
+                self.run_status.append("All symptom checks passed. Conclude now: tell the user what was done "
+                                       "and what the checks showed.")
+            else:
+                limit = "" if self.allow_mutation else " No further changes are allowed."
+                self.run_status.append("The symptom is NOT confirmed fixed." + limit +
+                                       " Use read-only tools to explain why, or conclude honestly that it is not fixed.")
             self.emit("verification", {"action_id": proposal.action_id, **verdict.to_dict()})
         self.outcome.steps.append(record)
         self.history.append(record)

@@ -18,11 +18,12 @@ python -m unittest discover -s tests/unit -v                     # no model need
 python -m troubleshoot.agent.cli status                          # live runtime/model/capabilities
 python -m troubleshoot.agent.cli smoke --record docs/evidence/local-model
 python -m troubleshoot.agent.cli eval  --record docs/evidence/local-model
+python -m troubleshoot.agent.cli vision --record docs/evidence/local-model
 ```
 
 Settings via environment: `TROUBLESHOOT_OLLAMA_MODEL` (default `gemma4:e2b`), `TROUBLESHOOT_OLLAMA_URL` (default `http://127.0.0.1:11434`), `TROUBLESHOOT_OLLAMA_ALLOW_LAN=1` to permit a non-loopback runtime such as the host seen from the VirtualBox guest. A LAN runtime is reported as `locality: "lan"`, never as local.
 
-`smoke` and `eval` use **real local inference** with **simulated tools and facts** (`agent/simulation.py`). They measure the model's decisions and the loop's safety behavior. They are not Windows troubleshooting evidence; Member 1's guest runs provide that.
+`smoke`, `eval` and `vision` use **real local inference** with **simulated tools and facts** (`agent/simulation.py`). They measure the model's decisions and the loop's safety behavior. They are not Windows troubleshooting evidence; Member 1's guest runs provide that. `vision` sends the **synthetic** screenshots in `docs/evidence/local-model/fixtures/` and removes the service state from the text facts, so a correct choice shows the model read the image.
 
 ## Provider protocol (for Member 3's hosted adapter)
 
@@ -70,9 +71,10 @@ Coordinator(provider, Catalog([...ToolSpec]), Budget()).run(complaint, mode, hoo
 3. Model output that breaks the schema is rejected and fed back once in HISTORY; more than `max_invalid` consecutive rejections ends the run with `error`.
 4. Inference outlasts the 5 s freshness window, so after a decision the target is observed again, identity compared, and the proposal bound to that new observation (`require_target`). After approval it is observed once more; a replaced target aborts.
 5. Budgets: 6 decisions, 1 approved change, 300 s wall clock, 120 s per model call, 400 output tokens per decision. Identical repeated tool calls are rejected.
-6. Observed text is fenced as untrusted data with a random nonce; instruction-like snippets are reported in `Outcome.untrusted_instructions`. The guard is structural (schema, registry, approval), not the prompt.
-7. Verdict: all symptom checks pass with execution `ok` → `resolved`; some → `partial`; none or no symptom checks → `unresolved`. A model opinion can only lower a verdict. "Restarted successfully" without a passing symptom check is never `resolved`.
-8. Images go to the model only when the run opted into vision and the observation has one; events carry only the image `ref`.
+6. After a change, a RUN STATUS line written by the coordinator (not by the machine) states the deterministic verdict. Mutating tools then leave the schema; after `resolved`, the schema only allows `conclude`. If the model still fails to summarise, the run reports the checks themselves and says so in `limitations`.
+7. Observed text is fenced as untrusted data with a random nonce; instruction-like snippets are reported in `Outcome.untrusted_instructions`. The guard is structural (schema, registry, approval), not the prompt.
+8. Verdict: all symptom checks pass with execution `ok` → `resolved`; some → `partial`; none or no symptom checks → `unresolved`. A model opinion can only lower a verdict. "Restarted successfully" without a passing symptom check is never `resolved`.
+9. Images go to the model only when the run opted into vision and the observation has one; events carry only the image `ref`.
 
 ## Evidence
 

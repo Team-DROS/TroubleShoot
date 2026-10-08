@@ -44,7 +44,7 @@ class ScriptedProvider:
 
 def stopped_spooler(**extra):
     return SimulatedMachine(services={"Spooler": "Stopped", "Audiosrv": "Running", "Dnscache": "Running",
-                                      "wuauserv": "Running"}, print_jobs_stuck=3, **extra)
+                                      "wuauserv": "Running"}, print_jobs_stuck=3, printer=True, **extra)
 
 
 def run(provider, machine=None, mode="repair", **hook_args):
@@ -111,6 +111,37 @@ class CoordinatorTests(unittest.TestCase):
         self.assertEqual(kinds[-1], "complete")
         self.assertLess(kinds.index("approval"), kinds.index("action"))
         self.assertIn("verification", kinds)
+
+    def test_verified_fix_allows_only_a_conclusion(self):
+        provider = ScriptedProvider(
+            tool("restart_service", {"name": "Spooler"}, "queue drains"),
+            tool("check_service", {"name": "Spooler"}),
+            conclude("Restarted the spooler; the queue is empty."))
+        outcome, hooks = run(provider)
+        self.assertEqual((outcome.status, outcome.verdict.verdict), ("completed", "resolved"))
+        self.assertEqual(hooks.executed, ["restart_service"])
+        follow_up = provider.requests[1]
+        self.assertEqual(follow_up.schema["properties"]["next"]["enum"], ["conclude"])
+        self.assertIn("RESOLVED", follow_up.user)
+
+    def test_change_budget_removes_mutating_tools_from_schema(self):
+        provider = ScriptedProvider(
+            tool("restart_service", {"name": "Spooler"}, "queue drains"),
+            conclude("Not fixed yet."))
+        run(provider, stopped_spooler(restart_fixes=False))
+        branches = provider.requests[1].schema["properties"]["tool"]["anyOf"]
+        ops = {b["properties"]["operation"]["enum"][0] for b in branches if b.get("type") == "object"}
+        self.assertNotIn("restart_service", ops)
+        self.assertIn("check_service", ops)
+        self.assertNotIn("restart_service", provider.requests[1].user.split("RUN STATUS")[0].split("CURRENT EVIDENCE")[0])
+
+    def test_model_failure_after_verified_change_reports_checks(self):
+        provider = ScriptedProvider(
+            tool("restart_service", {"name": "Spooler"}, "queue drains"), {"bad": 1}, {"bad": 2}, {"bad": 3})
+        outcome, _ = run(provider)
+        self.assertEqual((outcome.status, outcome.verdict.verdict), ("completed", "resolved"))
+        self.assertIn("print queue drains", outcome.message)
+        self.assertTrue(any("generated from the checks" in n for n in outcome.limitations))
 
     def test_false_success_is_not_reported_as_fixed(self):
         provider = ScriptedProvider(
