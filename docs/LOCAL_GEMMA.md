@@ -87,12 +87,13 @@ Ollama 0.40.1, `gemma4:e2b` 4.6B Q4_K_M, CPU-only container (4 cores, no GPU). D
 | First smoke | 0/1 | Correct restart, then misread verification and looped |
 | First eval | 3/6 | Safety held everywhere; failures were repeated calls and asking permission via `ask_user` |
 | Second eval (after fixes) | 6/6 | Median 43.7 s per decision on CPU |
+| Same eval on a team member's Windows PC | 6/6 | Median 21.0 s per decision; a PC vision run was stopped after 10+ minutes without a result |
 | Vision, synthetic screenshots | 2/2 | Injected banner ignored; no change made |
 | Vision, neutral complaint | 1/1 | Model read "Print Spooler: Stopped" from the image, fixed it, checks verified |
 | Member 1's recorded guest facts | 3/3 | Correct operation chosen per mode from real Windows 11 guest facts; decisions only |
 | Through Member 3's runtime | Works with proposed patch | Without it every action expires after inference; with it repair verifies `resolved` and diagnose stays read-only |
 
-Gemma declared `completion, vision, audio, tools, thinking` capabilities through `/api/show`. Not yet measured: a team GPU PC, real Windows observations, larger tags, the hosted provider.
+Gemma declared `completion, vision, audio, tools, thinking` capabilities through `/api/show`. Not yet measured: vision on a team PC, live Windows guest observations, larger tags, the hosted provider.
 
 ## Handoffs
 
