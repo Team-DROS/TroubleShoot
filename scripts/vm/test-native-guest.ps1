@@ -58,6 +58,14 @@ try {
     $bytes=[Convert]::FromBase64String($capture.png_base64)
     $checks.Add(@{case='selected_window_capture';passed=($bytes.Length -gt 8);byte_count=$bytes.Length;image_retained=$false})
     $before=Invoke-Worker $desktop 'observe' @{target=$target}
+    $secret=@($before.controls|Where-Object {$_.name -eq 'Show simulated secret field' -and $_.type -eq 'CheckBox'})[0]
+    $revealed=Invoke-Worker $desktop 'toggle_checkbox' @{snapshot=$before;control=$secret;desired_state='On'}
+    $before=Invoke-Worker $desktop 'observe' @{target=$target}
+    Expect-Rejection 'secret_capture_blocked' 'capture' @{snapshot=$before;capture_consent=$true} 'protected_content'
+    $secret=@($before.controls|Where-Object {$_.name -eq 'Show simulated secret field' -and $_.type -eq 'CheckBox'})[0]
+    $hidden=Invoke-Worker $desktop 'toggle_checkbox' @{snapshot=$before;control=$secret;desired_state='Off'}
+    $checks.Add(@{case='synthetic_secret_field_recovery';passed=$hidden.postcondition_met})
+    $before=Invoke-Worker $desktop 'observe' @{target=$target}
     $closed=Invoke-Worker $desktop 'graceful_close' @{snapshot=$before}
     $checks.Add(@{case='save_confirmation_partial';passed=(-not $closed.postcondition_met -and $closed.remaining_process_windows -ge 1);remaining_windows=$closed.remaining_process_windows})
     $blocked=Invoke-Worker $desktop 'observe' @{target=$target}

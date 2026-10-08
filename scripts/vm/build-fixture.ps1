@@ -17,7 +17,7 @@ public static class FreshFixture {
     [STAThread] public static void Main() {
         Application app=new Application();
         Window form=new Window();form.Title="TroubleShoot fresh fixture";
-        form.Width=480;form.Height=240;form.WindowStartupLocation=WindowStartupLocation.CenterScreen;
+        form.Width=480;form.Height=300;form.WindowStartupLocation=WindowStartupLocation.CenterScreen;
         StackPanel panel=new StackPanel();panel.Margin=new Thickness(20);
         CheckBox feature=new CheckBox();feature.Content="Enable demonstration feature";
         AutomationProperties.SetName(feature,"Enable demonstration feature");
@@ -26,9 +26,15 @@ public static class FreshFixture {
         AutomationProperties.SetName(save,"Require save confirmation");
         save.IsChecked=true;save.Margin=new Thickness(0,0,0,20);
         TextBlock status=new TextBlock();status.Text="Synthetic controller test only";
+        CheckBox secret=new CheckBox();secret.Content="Show simulated secret field";
+        AutomationProperties.SetName(secret,"Show simulated secret field");
+        secret.Margin=new Thickness(0,0,0,15);
+        PasswordBox password=new PasswordBox();password.Password="dummy";password.Height=25;
+        secret.Checked+=(s,e)=>panel.Children.Add(password);
+        secret.Unchecked+=(s,e)=>panel.Children.Remove(password);
         feature.Checked+=(s,e)=>status.Text="Feature state: True";
         feature.Unchecked+=(s,e)=>status.Text="Feature state: False";
-        panel.Children.Add(feature);panel.Children.Add(save);panel.Children.Add(status);form.Content=panel;
+        panel.Children.Add(feature);panel.Children.Add(save);panel.Children.Add(secret);panel.Children.Add(status);form.Content=panel;
         Window confirmation=null;
         string cleanup=System.Reflection.Assembly.GetExecutingAssembly().Location+".cleanup";
         DispatcherTimer timer=new DispatcherTimer();timer.Interval=TimeSpan.FromMilliseconds(200);

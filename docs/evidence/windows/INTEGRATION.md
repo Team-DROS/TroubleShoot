@@ -18,6 +18,8 @@ Newly authored on `member-1/windows-desktop-vm`; standard-library Python plus Wi
 
 Observations expose bounded control metadata (up to 80 nodes); password/edit/document fields and their subtrees are omitted. UI text is untrusted data. Image bytes from selected-window capture stay in memory and must not enter general logs. Capture may fail/produce incomplete content for applications unsupported by PrintWindow; no whole-screen fallback.
 
+Capture is conservatively refused when inspection encounters a password/edit/document subtree or truncates the control tree, because this first controller cannot safely redact unknown content. `capture_allowed` exposes that restriction; the native worker repeats it independently.
+
 Supported proposed actions: checkbox `control_id` + `state` (`On`/`Off`), graceful close with no arguments, stopped-Spooler start with no arguments. No generic click, typing, arbitrary service, shell or script execution is exposed. These are initial bounded capabilities, not an ability to solve any Windows problem.
 
 ## Verification and recovery limits

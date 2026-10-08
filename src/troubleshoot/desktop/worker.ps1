@@ -64,7 +64,7 @@ public static class TSWindow {
             $entry=$queue.Dequeue();$element=$entry[0];$depth=[int]$entry[1];$visited++
             $c=$element.Current
             $type=$c.ControlType.ProgrammaticName.Replace('ControlType.','')
-            if($c.IsPassword -or $type -in @('Edit','Document')){continue}
+            if($c.IsPassword -or $type -in @('Edit','Document')){$script:captureSafe=$false;continue}
             $toggle=$null
             if($type -eq 'CheckBox') {
                 try {$toggle=[string]([Windows.Automation.TogglePattern]$element.GetCurrentPattern([Windows.Automation.TogglePattern]::Pattern)).Current.ToggleState}catch{}
@@ -79,18 +79,23 @@ public static class TSWindow {
                 while($null -ne $child -and $siblings -lt 24 -and $queue.Count -lt 80) {
                     $queue.Enqueue(@($child,($depth+1)));$child=$walker.GetNextSibling($child);$siblings++
                 }
+                if($null -ne $child){$script:captureSafe=$false}
+            } elseif($null -ne $walker.GetFirstChild($element)) {
+                $script:captureSafe=$false
             }
         }
+        if($queue.Count){$script:captureSafe=$false}
         return $rows.ToArray()
     }
     function Snapshot([long]$handle) {
         $target=Identity $handle
         $h=[IntPtr]$handle
         $root=[Windows.Automation.AutomationElement]::FromHandle($h)
+        $script:captureSafe=$true
         $controls=@(ControlRows $root)
         if(-not (SameTarget $target (Identity $handle))){throw 'target_changed'}
         return @{target=$target;observed_at=[DateTime]::UtcNow.ToString('o');bounds=(Bounding ([TSWindow]::Bounds($h)));
-            dpi=[int][TSWindow]::GetDpiForWindow($h);foreground=([TSWindow]::GetForegroundWindow() -eq $h);controls=$controls}
+            dpi=[int][TSWindow]::GetDpiForWindow($h);foreground=([TSWindow]::GetForegroundWindow() -eq $h);controls=$controls;capture_allowed=$script:captureSafe}
     }
     function CheckSnapshot($expected) {
         $age=([DateTimeOffset]::UtcNow-[DateTimeOffset]::Parse($expected.observed_at)).TotalSeconds
@@ -129,6 +134,7 @@ public static class TSWindow {
     } elseif($Operation -eq 'capture') {
         if($payload.capture_consent -isnot [bool] -or -not $payload.capture_consent){throw 'capture_consent_required'}
         $before=CheckSnapshot $payload.snapshot
+        if(-not $before.capture_allowed){throw 'protected_content'}
         $width=$before.bounds.width;$height=$before.bounds.height
         if($width -le 0 -or $height -le 0 -or $width*$height -gt 4000000){throw 'capture_size_limit'}
         $bitmap=New-Object Drawing.Bitmap($width,$height)
@@ -137,6 +143,7 @@ public static class TSWindow {
         try {if(-not [TSWindow]::PrintWindow([IntPtr]$before.target.handle,$dc,2)){throw 'capture_failed'}}finally{$graphics.ReleaseHdc($dc)}
         try {
             $after=CheckSnapshot $payload.snapshot
+            if(-not $after.capture_allowed){throw 'protected_content'}
             $stream=New-Object IO.MemoryStream
             try {$bitmap.Save($stream,[Drawing.Imaging.ImageFormat]::Png);$result=@{png_base64=[Convert]::ToBase64String($stream.ToArray());target=$after.target}}
             finally{$stream.Dispose()}
@@ -182,7 +189,7 @@ public static class TSWindow {
     }
     @{ok=$true;evidence=$result}|ConvertTo-Json -Depth 16 -Compress
 }catch {
-    $known=@('hidden_target','protected_target','target_changed','stale_observation','geometry_changed','foreground_changed','capture_consent_required','capture_size_limit','capture_failed','control_changed')
+    $known=@('hidden_target','protected_target','protected_content','target_changed','stale_observation','geometry_changed','foreground_changed','capture_consent_required','capture_size_limit','capture_failed','control_changed')
     $code=if($_.Exception.Message -in $known){$_.Exception.Message}else{'native_failure'}
     @{ok=$false;code=$code}|ConvertTo-Json -Compress
     exit 1
