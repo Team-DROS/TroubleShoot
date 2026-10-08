@@ -101,11 +101,18 @@ class SessionTests(unittest.IsolatedAsyncioTestCase):
     async def test_action_tampering_rejected(self):
         run = await self.start()
         run.approval["action"]["arguments"]["command"] = "injected"
-        # The stored immutable digest still authorizes only the original empty arguments.
+        with self.assertRaises(RuntimeFailure):
+            self.approve(run)
+        self.assertEqual(self.executor.executions, 0)
+
+    async def test_pending_recovery_blocks_later_repairs(self):
+        self.executor.error = True
+        run = await self.start()
         self.approve(run)
         await self.completed(run)
-        # Mutating the approval display cannot change the executor's original action.
-        self.assertEqual(self.executor.executions, 1)
+        with self.assertRaises(RuntimeFailure) as caught:
+            await self.start()
+        self.assertEqual(caught.exception.code, "recovery_required")
 
     async def test_model_failure_redacted_and_no_fallback(self):
         self.provider.error = True

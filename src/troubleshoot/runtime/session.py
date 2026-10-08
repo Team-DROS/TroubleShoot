@@ -77,6 +77,8 @@ class SessionManager:
         run.state = "complete"
 
     def create(self, request, target=None):
+        if request.mode == "repair" and any(r.recovery in {"pending", "failed"} for r in self.runs.values()):
+            raise RuntimeFailure("recovery_required")
         if request.provider not in self.providers:
             raise RuntimeFailure("provider_unavailable")
         if not self.providers[request.provider].status()["configured"]:
@@ -113,7 +115,8 @@ class SessionManager:
                 or run.cancelled.is_set() or run.choice.done()
                 or monotonic() > approval["deadline"]
                 or not secrets.compare_digest(token, approval["token"])
-                or action_id != approval["action"]["action_id"]):
+                or action_id != approval["action"]["action_id"]
+                or digest({"run": run.id, "action": approval["action"]}) != approval["digest"]):
             raise RuntimeFailure("invalid_approval")
         run.approval = None  # consume before releasing the waiting worker
         run.choice.set_result(approve)
@@ -184,6 +187,7 @@ class SessionManager:
             run.choice = asyncio.get_running_loop().create_future()
             token = secrets.token_urlsafe(32)
             run.approval = {"token": token, "action": bound_action,
+                            "digest": bound_digest,
                             "deadline": monotonic() + self.approval_seconds}
             self.emit(run, "approval", {"token": token, "action": bound_action,
                       "expires_in_seconds": self.approval_seconds,
@@ -201,6 +205,8 @@ class SessionManager:
         async with self.tool_lock:
             if self.stopped(run):
                 return
+            if operation.mutates and any(r.recovery in {"pending", "failed"} for r in self.runs.values()):
+                raise RuntimeFailure("recovery_required")
             if digest({"run": run.id, "action": action.to_dict()}) != bound_digest:
                 raise ContractError("Action changed after approval")
             # Old observations cannot authorize delayed or queued input.
@@ -213,6 +219,7 @@ class SessionManager:
                 raise ContractError("Target changed; new run/approval required")
             if self.stopped(run):
                 return
+            require_target(action, snapshot.observation, utcnow())
             run.state = "executing"
             run.recovery = "pending" if operation.mutates else "none"
             result = await self._tool(self.executor.execute(
