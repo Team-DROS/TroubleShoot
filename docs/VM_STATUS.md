@@ -21,3 +21,5 @@ A disabled guest adapter may sever inference access. Choose a first repair scena
 Keep OS license acceptance and UAC with the user. Verify actual Windows desktop/dependencies, resource headroom and recovery state; record time and evidence in VALIDATION.md when available. No old VM repair results count for the fresh build.
 
 Member 2 helps with local-model/image reasoning; Member 3 helps API/hosted transport. Neither needs a second VM to complete their role. Record fresh guest evidence for Member 4 to document.
+
+Fresh mouse validation (source `2fa7187`): all 22 native guest checks passed at 12:55:55 IST on 8 October 2026, including movement/click/double click/scroll/slider drag and refusal/cancellation/recovery cases. Report: `docs/evidence/windows/mouse-2026-10-08.json`. Demo work and recording are deferred; a synthetic controller script remains available for later. No Gemma or real application repair was tested in this mouse suite.

@@ -23,3 +23,11 @@ The native tools run, but no runnable project API/UI, hosted adapter or local-mo
 Tests reuse installed Python/.NET/PowerShell and the VM infrastructure without model/VM duplication. Guest Python was unavailable; native tests were run in its actual interactive Windows session. Slow guest PowerShell startup means the 5-second observation gate may reject a future process-per-action integration; measure it and design a persistent bounded worker rather than relaxing freshness silently.
 
 Member 1 owns this report and appends actual guest/native evidence, with local-model evidence from Member 2 and API/hosted/UI evidence from Member 3 with revision/time, OS/model/provider, scenario, before facts, approval/action, fresh postchecks, recovery and limitations.
+
+## Bounded mouse tools: 8 October 2026
+
+Source revision `2fa7187`, native report at 07:25:55 UTC / 12:55:55 IST: all 22 fresh synthetic guest checks passed. Move, single/double left click, bounded list scroll and slider drag changed independently observed fixture state. Checks also cover secret/occluded targets, Escape, held modifiers, concurrent input, cancellation between clicks, out-of-client points, stale/replaced targets, changed DPI/monitor/window geometry, user cursor movement and cooperative fixture/cursor recovery. Evidence: `docs/evidence/windows/mouse-2026-10-08.json`.
+
+65 unit tests pass, including 19 new mouse policy/transport tests. Mouse actions remain bounded to supported selected UI Automation controls; there is no arbitrary desktop typing or general canvas automation. Delivered input returns a partial result until the caller verifies its actual symptom. Native fixture actions and Python authorization checks are separately validated, not a full API/Gemma flow. Physical multi-monitor/DPI hardware, process crash at every input boundary and actual Gemma-driven interaction remain untested. See `docs/evidence/windows/MOUSE_TOOLS.md` for integration and limits.
+
+A small predetermined controller demo script is included for later use. Demo recording/presentation is deferred at the user's request; no video was produced. No model inference or real troubleshooting success is claimed.

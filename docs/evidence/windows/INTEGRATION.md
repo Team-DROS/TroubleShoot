@@ -6,7 +6,7 @@ Newly authored on `member-1/windows-desktop-vm`; standard-library Python plus Wi
 
 - Import `WINDOWS_VALIDATORS` from `troubleshoot.windows.registry` and `DESKTOP_VALIDATORS` from `troubleshoot.desktop.executor` into the shared action parser's allowlist. Do not expose `restore_spooler_stopped` as a model action.
 - `WindowsExecutor(worker=None, recovery_dir=Path(...))`: `diagnose(operation, arguments)` or `start_spooler(arguments, context)` returns `ExecutionResult(status, evidence, changed, limitations)`. `changed=None` means uncertain outcome, requiring inspection rather than a retry.
-- `DesktopExecutor(worker=None, clock=None)`: `list_targets()`, `observe(Target)`, `capture(WindowObservation, consent=True)`, `toggle_checkbox(snapshot, arguments, context)`, `graceful_close(snapshot, {}, context)`.
+- `DesktopExecutor(worker=None, clock=None)`: `list_targets()`, `observe(Target)`, `capture(WindowObservation, consent=True)`, `toggle_checkbox(snapshot, arguments, context)`, `graceful_close(snapshot, {}, context)`, `mouse_action(operation, snapshot, arguments, context)`. See `MOUSE_TOOLS.md` for exact mouse schemas and stop behavior.
 - Call shared `require_target(proposal, snapshot.observation, now)` before dispatch. Keep authoritative observations server-side; never accept client-created metadata as trusted evidence. Target binding includes handle/PID/process-start time; native worker repeats binding before input.
 - Inject `ExecutionContext(run_id, action_id, mode, cancelled=threading.Event(), consume_authorization=...)`. The callback receives `AuthorizationRequest` with exact operation/state/arguments fingerprint. It must atomically consume one specific, session-bound human approval and return the boolean `True`; no automatic blanket approver in production. Scope capture consent separately from cloud/image transfer consent.
 - Approval must finish within observation freshness (5 seconds), otherwise obtain a new observation and approval. No silent refresh/reuse of an old approval. Keep UI selection/approval close in time; slow native worker startup can correctly expire an action.
@@ -20,7 +20,7 @@ Observations expose bounded control metadata (up to 80 nodes); password/edit/doc
 
 Capture is conservatively refused when inspection encounters a password/edit/document subtree or truncates the control tree, because this first controller cannot safely redact unknown content. `capture_allowed` exposes that restriction; the native worker repeats it independently.
 
-Supported proposed actions: checkbox `control_id` + `state` (`On`/`Off`), graceful close with no arguments, stopped-Spooler start with no arguments. No generic click, typing, arbitrary service, shell or script execution is exposed. These are initial bounded capabilities, not an ability to solve any Windows problem.
+Supported proposed actions: checkbox `control_id` + `state` (`On`/`Off`), graceful close with no arguments, stopped-Spooler start with no arguments, and five selected-control mouse operations detailed in `MOUSE_TOOLS.md`. No unrestricted canvas clicking, typing, arbitrary service, shell or script execution is exposed. These are initial bounded capabilities, not an ability to solve any Windows problem.
 
 ## Verification and recovery limits
 

@@ -1,0 +1,121 @@
+{
+  "symptom_verified": false,
+  "provider": "none",
+  "synthetic_ui": true,
+  "observed_at": "2026-10-08T07:25:55.9546402Z",
+  "checks": [
+    {
+      "case": "move",
+      "passed": true
+    },
+    {
+      "case": "click",
+      "passed": true
+    },
+    {
+      "state": [
+        "Double clicks: 1"
+      ],
+      "case": "double_click",
+      "passed": true
+    },
+    {
+      "state": [
+        "Scroll offset: 3"
+      ],
+      "case": "scroll",
+      "passed": true
+    },
+    {
+      "state": [
+        "Slider: 76"
+      ],
+      "case": "drag",
+      "passed": true
+    },
+    {
+      "case": "secret_hit_blocked",
+      "code": "protected_content",
+      "passed": true
+    },
+    {
+      "case": "escape_stop",
+      "code": "emergency_stop",
+      "passed": true
+    },
+    {
+      "case": "modifier_interference",
+      "code": "user_input_active",
+      "passed": true
+    },
+    {
+      "case": "concurrent_input_locked",
+      "code": "mouse_busy",
+      "passed": true
+    },
+    {
+      "case": "covered_point",
+      "code": "point_occluded",
+      "passed": true
+    },
+    {
+      "case": "cancel_between_clicks",
+      "code": "mouse_input_cancelled",
+      "passed": true
+    },
+    {
+      "case": "cancel_prevents_second_click",
+      "passed": true
+    },
+    {
+      "case": "cancel_before_input",
+      "code": "mouse_input_cancelled",
+      "passed": true
+    },
+    {
+      "case": "outside_client",
+      "code": "point_outside",
+      "passed": true
+    },
+    {
+      "case": "stale_mouse",
+      "code": "stale_observation",
+      "passed": true
+    },
+    {
+      "case": "replaced_mouse_identity",
+      "code": "target_changed",
+      "passed": true
+    },
+    {
+      "case": "changed_dpi",
+      "code": "geometry_changed",
+      "passed": true
+    },
+    {
+      "case": "user_cursor_interference",
+      "code": "user_cursor_moved",
+      "passed": true
+    },
+    {
+      "case": "changed_monitor_geometry",
+      "code": "geometry_changed",
+      "passed": true
+    },
+    {
+      "case": "resized_window",
+      "code": "geometry_changed",
+      "passed": true
+    },
+    {
+      "case": "fixture_cleanup",
+      "passed": true
+    },
+    {
+      "case": "cursor_restored",
+      "passed": true
+    }
+  ],
+  "source_revision": "2fa7187",
+  "scope": "Native synthetic guest controls; Python approval gates separately unit tested; no model or real repair verification"
+}
