@@ -1,5 +1,5 @@
 const $ = id => document.getElementById(id);
-let token = "", status = null, runId = null, approval = null, starting = false, lastEventId = "0";
+let token = "", status = null, runId = null, approval = null, starting = false, lastEventId = "0", diagnosisConcluded = false;
 
 const errorHelp = {
   unauthorized: "Session expired or incorrect. Reopen the Windows launcher to reconnect.",
@@ -71,7 +71,11 @@ function receive(item) {
   heading.textContent = "View evidence"; content.textContent = JSON.stringify(safePayload, null, 2);
   detail.append(heading, content); row.append(detail);
   $("progress").textContent = labels[item.type] || item.type;
-  if (item.type === "plan") $("diagnosis").textContent = item.payload.summary;
+  if (item.type === "plan") {
+    $("diagnosis").textContent = item.payload.summary;
+    diagnosisConcluded = $("mode").value === "diagnose" && item.payload.action === null;
+  }
+  if (item.type === "error" || item.type === "action") diagnosisConcluded = false;
   if (item.type === "observation") {
     const facts = item.payload.facts || {};
     const summary = document.createElement("p");
@@ -88,7 +92,10 @@ function receive(item) {
   if (item.type === "error") showError(item.payload.code);
   if (item.type === "complete") {
     $("result").hidden = false;
-    $("verdict").textContent = `${item.payload.verdict}${item.payload.simulation ? " (synthetic fixture)" : ""}`;
+    const diagnosisComplete = diagnosisConcluded && item.payload.verdict === "unresolved" && item.payload.recovery === "none";
+    const resultLabel = diagnosisComplete ? "Diagnosis complete · no changes made" : item.payload.verdict;
+    $("verdict").textContent = `${resultLabel}${item.payload.simulation ? " (synthetic fixture)" : ""}`;
+    if (diagnosisComplete) $("progress").textContent = "Diagnosis complete";
     $("recovery").textContent = `Recovery: ${item.payload.recovery}`;
     $("limitations").textContent = item.payload.limitations.join(" ");
     $("cloud").checked = false;
@@ -119,7 +126,7 @@ async function streamEvents(id) {
 }
 
 $("run-form").addEventListener("submit", async event => {
-  event.preventDefault(); if (runId || starting) return; clearError(); starting = true; lastEventId = "0";
+  event.preventDefault(); if (runId || starting) return; clearError(); starting = true; lastEventId = "0"; diagnosisConcluded = false;
   $("start").disabled = true;
   $("diagnosis").textContent = ""; $("progress").textContent = "Collecting fresh facts and asking Gemma…";
   $("timeline").replaceChildren(); $("empty").hidden = false; $("result").hidden = true;

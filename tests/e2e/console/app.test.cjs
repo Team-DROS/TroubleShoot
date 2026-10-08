@@ -98,3 +98,22 @@ test('offline state disables new inference and explains the helper requirement',
   assert.equal(h.element('start').disabled, true);
   assert.match(h.element('connection-notice').textContent, /Windows helper/);
 });
+
+
+test('successful diagnosis without an action is not presented as a failed repair', () => {
+  const h = harness();
+  h.run(`receive({id:'1',type:'plan',payload:{summary:'Fresh system facts',action:null}});
+    receive({id:'2',type:'complete',payload:{verdict:'unresolved',recovery:'none',limitations:['No symptom verified'],simulation:false}})`);
+  assert.equal(h.element('verdict').textContent, 'Diagnosis complete · no changes made');
+  assert.equal(h.element('limitations').textContent, 'No symptom verified');
+});
+
+test('repair mode and errors never get a successful diagnosis label', () => {
+  for (const mode of ['diagnose', 'repair']) {
+    const h = harness(); h.element('mode').value = mode;
+    h.run(`receive({id:'1',type:'plan',payload:{summary:'Facts',action:null}})`);
+    if (mode === 'diagnose') h.run(`receive({id:'2',type:'error',payload:{code:'hosted_unavailable'}})`);
+    h.run(`receive({id:'3',type:'complete',payload:{verdict:'unresolved',recovery:'none',limitations:[],simulation:false}})`);
+    assert.equal(h.element('verdict').textContent, 'unresolved');
+  }
+});
