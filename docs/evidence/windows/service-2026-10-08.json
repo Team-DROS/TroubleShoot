@@ -1,0 +1,21 @@
+{
+  "finished_at": "2026-10-08T06:30:15.5111397Z",
+  "snapshot_id": "d92e3823-463e-4b5a-9ea1-dc4312c05450",
+  "repair": {
+    "changed": true,
+    "status": "Running",
+    "observed_at": "2026-10-08T06:30:15.4681609Z",
+    "name": "Spooler"
+  },
+  "restored": true,
+  "after": "Running",
+  "before": "Running",
+  "fault_status": "Stopped",
+  "actual_print_verified": false,
+  "started_at": "2026-10-08T06:30:14.395279Z",
+  "postcondition_met": true,
+  "provider": "none",
+  "source_matching_commit": "6ad86df",
+  "human_uac_confirmed": true,
+  "validation_scope": "Native guest service worker; no model/API integration"
+}

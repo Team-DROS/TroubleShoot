@@ -1,0 +1,77 @@
+{
+  "service_fault_attempted": false,
+  "provider": "none",
+  "synthetic_ui": true,
+  "os": {
+    "version": "10.0.26100",
+    "memory_total_kib": 4174724,
+    "memory_free_kib": 1797648,
+    "observed_at": "2026-10-08T06:33:55.5618733Z",
+    "disks": [
+      {
+        "free_bytes": 33606758400,
+        "drive": "C:",
+        "size_bytes": 67921506304
+      }
+    ],
+    "os": "Microsoft Windows 11 Enterprise LTSC Evaluation"
+  },
+  "checks": [
+    {
+      "service_status": "Running",
+      "case": "healthy_diagnosis",
+      "passed": true
+    },
+    {
+      "case": "capture_denied",
+      "code": "capture_consent_required",
+      "passed": true
+    },
+    {
+      "case": "stale_capture",
+      "code": "stale_observation",
+      "passed": true
+    },
+    {
+      "case": "reused_identity",
+      "code": "target_changed",
+      "passed": true
+    },
+    {
+      "case": "synthetic_checkbox",
+      "original_symptom_verified": false,
+      "passed": true
+    },
+    {
+      "image_retained": false,
+      "case": "selected_window_capture",
+      "byte_count": 9824,
+      "passed": true
+    },
+    {
+      "case": "secret_capture_blocked",
+      "code": "protected_content",
+      "passed": true
+    },
+    {
+      "case": "synthetic_secret_field_recovery",
+      "passed": true
+    },
+    {
+      "remaining_windows": 2,
+      "case": "save_confirmation_partial",
+      "passed": true
+    },
+    {
+      "case": "foreground_loss",
+      "code": "foreground_changed",
+      "passed": true
+    },
+    {
+      "case": "fixture_cooperative_recovery",
+      "passed": true
+    }
+  ],
+  "source_commit": "f4d5838",
+  "validation_scope": "Native guest mechanics; Python approval boundary separately unit tested; no model/API integration"
+}
