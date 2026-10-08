@@ -11,7 +11,7 @@ Owner: Member 4. Created 8 October 2026. Keep updated as runtime components land
 
 This repository is a fresh implementation started on 8 October 2026. No source,
 prompts, tests, manifests, UI or compiled output from the team's earlier prototype
-has been imported. See [PROVENANCE.md](PROVENANCE.md) for repository history.
+has been imported.
 
 ---
 

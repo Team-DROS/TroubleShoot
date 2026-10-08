@@ -1,6 +1,6 @@
 # Fresh-build instructions for every team coding agent
 
-Read PROJECT_CONTEXT.md, HACKATHON_AGENT_RULES.md, docs/PROVENANCE.md, docs/RESTART.md and your docs/team/MEMBER_N.md before work.
+Read PROJECT_CONTEXT.md, HACKATHON_AGENT_RULES.md, docs/RESTART.md and your docs/team/MEMBER_N.md before work.
 
 - The user's latest instruction says organizers withdrew code-reuse permission. It supersedes every older permission statement. Build a new implementation from the requirements in these planning documents.
 - Do not copy, translate, port, cherry-pick, recover or use the old prototype as an implementation template. This includes source, prompts, tests, manifests/locks, scripts, UI, compiled output, recordings and old results. Do not ask another agent to do that for you. Do not inspect historical implementation to recreate it. General problem knowledge and new planning are not working code.

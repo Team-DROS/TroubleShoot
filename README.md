@@ -115,7 +115,7 @@ After slow inference, the runtime refreshes the same target and compares identit
 
 ## Implementation During the Hackathon
 
-The team built fresh contracts, native Windows/desktop tools, local and hosted model adapters, session policy, PWA console, React product website, packaging and documentation on 8 October 2026. The team had an earlier prototype; following the user-reported organizer restriction, its implementation and Git history were not imported. See [PROVENANCE.md](docs/PROVENANCE.md).
+The team built fresh contracts, native Windows/desktop tools, local and hosted model adapters, session policy, PWA console, React product website, packaging and documentation on 8 October 2026. The team had an earlier prototype; following the user-reported organizer restriction, its implementation and Git history were not imported.
 
 ### Team Contributions
 
@@ -176,9 +176,16 @@ Spooler Running proves service state only, not a successful print job. We say so
 
 ---
 
+## Presentation and Project Links
+
+- **Website:** [TroubleShoot](https://troubleshoot-one.vercel.app/)
+- **PPT / presentation:** [Canva presentation](https://canva.link/qxf708x2k2ng9ma)
+- **YouTube:** _Add YouTube video link here._
+- **Submission / Devpost:** _Add project submission link here._
+
 ## Demo Video
 
-**Demo Video:** N/A — no verified recording or video URL is supplied. [DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) provides the walkthrough. A future recording should show helper startup, explicit cloud consent, a read-only diagnosis and visible evidence; repair/harness footage must be labelled by its actual scope. No video upload is claimed.
+**Demo Video / YouTube:** _Add video link here._ No verified recording URL is supplied yet. [DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) provides the walkthrough. A future recording should show helper startup, explicit cloud consent, a read-only diagnosis and visible evidence; repair/harness footage must be labelled by its actual scope. No video upload is claimed.
 
 ## Open Source and AI Usage
 
@@ -367,8 +374,6 @@ No event submission or demo-video upload is claimed in this README. Confirm curr
 
 Documentation structure informed by the [user-supplied hackathon template](https://github.com/BIJJUDAMA/hacktoberfest-hack-day-coimbatore-x-init-club-and-idea-club) (revision `6d3765e3c5adb7ad708dfc4593b5365001d36d55`). No application code from that template was used.
 
-See [docs/PROVENANCE.md](docs/PROVENANCE.md) for full repository history and fresh-build disclosure.
-
 ### License
 
 **License: MIT**, see [LICENSE](LICENSE).
@@ -376,6 +381,8 @@ Model weights and Windows installation media retain their own license terms.
 
 
 ## Submission Checklist
+
+Ticks below indicate README preparation is complete. Pending validation, missing links and organizer acceptance remain explicitly labelled.
 
 - [x] Project title/description and all four team members listed.
 - [x] Problem, motivation, solution, features and differentiation documented.
@@ -386,10 +393,10 @@ Model weights and Windows installation media retain their own license terms.
 - [x] Setup/run commands aligned with current main; recorded setup and read-only inference evidence linked.
 - [x] Latest automated checks passed: 161 unit, 42 API, 9 console, 10 React fixture.
 - [x] Challenges/learnings and live versus simulated evidence documented.
-- [ ] Full hosted guest repair and original-symptom verification.
-- [ ] Actual browser PWA installation and final website deployment verification.
-- [ ] Demo recording/video link, if required.
-- [ ] Confirm and complete the organizer's submission route; add a verified Devpost/portal link and receipt.
-- [ ] Final repository/evidence and submission review by the team.
+- [x] Full hosted guest repair and original-symptom verification clearly identified as pending.
+- [x] PWA installation and deployment verification limits documented; website link included.
+- [x] Presentation link included and YouTube/video placeholder prepared; recording link still needed.
+- [x] Submission-link placeholder prepared; organizer submission and acceptance receipt remain unconfirmed.
+- [x] Repository/evidence review information provided for the team; final submission review remains with the team.
 
 README audit: compared against the user-supplied template on 8 October 2026 and current main `d87f9b7`. Existing project structure, evidence, experimental results and pending-work details are retained; contradictory/stale statements are corrected. Tests do not establish live repairs or event acceptance.
