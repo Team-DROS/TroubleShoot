@@ -160,4 +160,22 @@ def create_app(manager, session_token, *, port=8765, web_root=None):
     async def style():
         return FileResponse(root / "style.css", media_type="text/css")
 
+    @app.get("/manifest.webmanifest")
+    async def manifest():
+        return FileResponse(root / "manifest.webmanifest", media_type="application/manifest+json")
+
+    @app.get("/sw.js")
+    async def service_worker():
+        return FileResponse(root / "sw.js", media_type="text/javascript")
+
+    @app.get("/icon.svg")
+    async def icon():
+        return FileResponse(root / "icon.svg", media_type="image/svg+xml")
+
+    @app.get("/icon-{size}.png")
+    async def png_icon(size: int):
+        if size not in (192, 512):
+            return JSONResponse({"error": "not_found"}, status_code=404)
+        return FileResponse(root / f"icon-{size}.png", media_type="image/png")
+
     return app

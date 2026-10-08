@@ -24,6 +24,7 @@ class HostedTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(req.headers["x-goog-api-key"], "synthetic-key")
             self.assertNotIn("synthetic-key", str(req.url))
             self.assertEqual(req.url.host, "generativelanguage.googleapis.com")
+            self.assertEqual(json.loads(req.content)["generationConfig"]["thinkingConfig"]["thinkingLevel"], "minimal")
             return httpx.Response(200, json=response())
         provider = GemmaAPI("synthetic-key", transport=httpx.MockTransport(handler))
         self.assertEqual(provider.status()["readiness"], "unverified")
@@ -82,3 +83,27 @@ class HostedTests(unittest.IsolatedAsyncioTestCase):
             with self.assertRaises(RuntimeFailure) as caught:
                 await GemmaAPI("fake", transport=httpx.MockTransport(handler)).decide(request())
             self.assertEqual(caught.exception.code, code)
+
+
+    async def test_fenced_json_but_no_surrounding_prose(self):
+        for output, valid in (("```json\n{\"summary\":\"Ready\",\"action\":null}\n```", True),
+                              ("Run this: {\"summary\":\"Ready\",\"action\":null}", False)):
+            payload = response()
+            payload["candidates"][0]["content"]["parts"][0]["text"] = output
+            provider = GemmaAPI("fake", transport=httpx.MockTransport(lambda req: httpx.Response(200, json=payload)))
+            if valid:
+                self.assertIsNone((await provider.decide(request()))["action"])
+            else:
+                with self.assertRaises(RuntimeFailure):
+                    await provider.decide(request())
+
+
+    async def test_diagnosis_excludes_mutations_and_supplies_argument_schema(self):
+        def handler(req):
+            context = json.loads(json.loads(req.content)["contents"][0]["parts"][0]["text"])
+            self.assertNotIn("start_spooler", context["operations"])
+            self.assertFalse(context["operations"]["spooler_status"]["arguments_schema"]["additionalProperties"])
+            return httpx.Response(200, json=response())
+        payload = request(mode="diagnose")
+        payload["operations"] = {"spooler_status": {"mutates": False}, "start_spooler": {"mutates": True}}
+        await GemmaAPI("fake", transport=httpx.MockTransport(handler)).decide(payload)

@@ -16,3 +16,10 @@ Read PROJECT_CONTEXT.md, HACKATHON_AGENT_RULES.md, docs/PROVENANCE.md, docs/REST
 
 - Actual hardware: Member 1 local Gemma + VM; Member 2 local Gemma only; Members 3/4 neither. Member 3 uses explicit test fixtures or hosted Gemma for API development; never silently ship mock inference. The final runtime remains local-first.
 - Member 4 considers the user-supplied hackathon template via docs/TEMPLATE_GUIDE.md. Keep README aligned with actual code, attribution, setup and event-time work; avoid organizer-only details and invented metrics. Template links/fields do not authorize release/submission.
+
+## Latest authorized integration override
+The user authorized one agent to finish across all member paths on integration/api-pwa.
+The current prototype is hosted Gemma API only with a loopback Windows helper and
+installable PWA. Earlier local-first requirements describe the previous scope.
+Keep explicit cloud consent, server-side keys, approvals, human UAC, fresh checks,
+private repository and the prohibition on old prototype reuse.

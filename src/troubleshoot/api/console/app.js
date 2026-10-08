@@ -35,6 +35,8 @@ $("connect").addEventListener("submit", async event => {
     const targets = await (await api("/api/targets")).json();
     $("target").replaceChildren(new Option("No window selected", ""));
     for (const item of targets.targets) $("target").add(new Option(item.label, JSON.stringify(item.target)));
+    const system = targets.targets.find(item => item.scope === "system");
+    if (system) $("target").value = JSON.stringify(system.target);
     $("target-status").textContent = targets.available ? "Select a permitted target for observed actions." : "Native window integration is pending.";
     $("status").textContent = status.simulation ? "Connected · SYNTHETIC FIXTURE; no real repair" : "Connected to the local API";
     $("token").value = "";
@@ -130,3 +132,20 @@ $("stop").addEventListener("click", async () => {
     if (result.state === "complete") { runId = null; updateControls(); }
   } catch (error) { showError(error.message); }
 });
+
+let installPrompt;
+window.addEventListener("beforeinstallprompt", event => {
+  event.preventDefault(); installPrompt = event; $("install").hidden = false;
+});
+$("install").addEventListener("click", async () => {
+  if (!installPrompt) return;
+  await installPrompt.prompt(); installPrompt = null; $("install").hidden = true;
+});
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
+
+const initialSession = new URLSearchParams(location.hash.slice(1)).get("session");
+if (initialSession) {
+  history.replaceState(null, "", location.pathname);
+  $("token").value = initialSession;
+  $("connect").requestSubmit();
+}

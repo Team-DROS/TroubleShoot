@@ -2,12 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>TroubleShoot · Local assistant</title>
+  <title>TroubleShoot · Windows assistant</title>
+  <meta name="theme-color" content="#101820"><link rel="manifest" href="/manifest.webmanifest">
   <link rel="stylesheet" href="/style.css"><script type="module" src="/app.js"></script>
 </head>
 <body>
 <main>
-  <header><span class="tag">WINDOWS ASSISTANT</span><h1>TroubleShoot</h1>
+  <header><button id="install" type="button" class="secondary" hidden>Install app</button><span class="tag">WINDOWS ASSISTANT</span><h1>TroubleShoot</h1>
     <p>Describe the problem. Review the proposed action. Check what actually changed.</p></header>
   <section aria-labelledby="connect-title"><h2 id="connect-title">Connect to your local session</h2>
     <form id="connect"><label for="token">Session token from the launcher</label>
@@ -22,7 +23,7 @@
       <div class="columns"><div><label for="mode">Mode</label><select id="mode">
         <option value="diagnose">Diagnose only</option><option value="repair">Repair with approval</option></select></div>
         <div><label for="provider">Provider</label><select id="provider">
-          <option value="ollama">Local Gemma (default)</option><option value="gemma_api">Hosted Gemma</option></select></div></div>
+          <option value="gemma_api">Hosted Gemma</option></select></div></div>
       <p id="provider-status" role="status">Connect to check provider readiness.</p>
       <label for="target">Selected window</label><select id="target"><option value="">No window selected</option></select>
       <p id="target-status" class="muted">Native window integration is pending.</p>
@@ -43,6 +44,6 @@
   <section aria-labelledby="timeline-title"><h2 id="timeline-title">Run timeline</h2><ol id="timeline"></ol>
     <p id="empty" class="muted">Observations, proposals and checks will appear here.</p></section>
   <section id="result" hidden aria-labelledby="result-title"><h2 id="result-title">Result</h2><p id="verdict" role="status"></p><p id="recovery"></p><p id="limitations"></p></section>
-  <footer>Execution success alone does not prove a repair. Local provider and Windows executor integration require the other members' components.</footer>
+  <footer>Execution success alone does not prove a repair. Hosted Gemma reasons; the local Windows helper executes approved registered actions. Spooler Running proves service state, not a successful print.</footer>
 </main>
 </body></html>

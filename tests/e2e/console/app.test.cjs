@@ -21,7 +21,9 @@ function harness(fetch) {
   const context = vm.createContext({
     document: { getElementById: element, createElement: () => ({ textContent: '' }) },
     Option: function(text, value) { this.textContent = text; this.value = value; },
-    fetch, TextDecoder, console,
+    fetch, TextDecoder, console, URLSearchParams,
+    window: { addEventListener() {} }, navigator: {},
+    location: { hash: "", pathname: "/" }, history: { replaceState() {} },
   });
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../../../src/troubleshoot/api/console/app.js'), 'utf8'), context);
   return { element, run: source => vm.runInContext(source, context) };

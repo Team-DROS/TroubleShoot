@@ -53,7 +53,7 @@ class SessionManager:
 
     def status(self):
         return {
-            "default_provider": "ollama", "simulation": self.simulation,
+            "default_provider": "ollama" if "ollama" in self.providers else "gemma_api", "simulation": self.simulation,
             "providers": {name: (self.providers[name].status() if name in self.providers else
                 {"configured": False, "readiness": "unavailable", "model": None,
                  "images": False}) for name in ("ollama", "gemma_api")},
