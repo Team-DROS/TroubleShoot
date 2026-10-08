@@ -1,5 +1,63 @@
 # Fresh project validation
 
+## Member 1 assistance check — 8 October 2026, 13:28 IST
+
+Prepared on the assisting teammate's PC by Umasuthan Palaniappan with Codex, not
+represented as new work performed on Member 1's guest. Source under test:
+`213db932948c293e097c0e1bc66562560bd24ddc`, based on Member 1 `3edf350`.
+Host OS reports Windows NT `10.0.26300.0`; Python `3.14`.
+The 16:15 IST team target remains unchanged.
+
+| Check | Actual result |
+|---|---|
+| Guest/snapshot access | Blocked: VirtualBox 7.2.20 lists no registered VMs, running VMs or hard disks on this PC. Its machine registry is empty. The earlier named `TROUBLESHOOT-Test` and snapshot `fresh-tools-preflight-20261008` cannot be inspected or restored here. |
+| Local model readiness | Member 2 CLI at `6ed184b45f2ad45aafa30769f523d043a311f335` reports reachable Ollama 0.40.1, installed `gemma4:e2b`, vision and structured-output capability. This status query is not a new inference result. |
+| Original private capture | Unavailable in this workspace. Original PNG dimensions/byte size cannot be verified and no real-image rerun occurred. Previous unknown/none vision failure remains the latest guest-image result. |
+| Helper correction | Target prompt now names `Enable demonstration feature`, asks for its visible state without supplying that state, checks PNG signature/header, byte size strictly below 4 MiB and dimensions up to 1280 px per side. Provider uses Member 2 environment configuration and records its actual checkout revision. Offline replay is no longer labelled a fresh live capture. |
+| Local checks | Existing 73 unit tests pass; modified helper compiles; Git whitespace check passes. These checks do not establish image interpretation quality. |
+| Full API guest validation | Not run. Remote Member 3 remains `769e895`; latest Member 1 mouse/recovery work and Member 2 mouse-schema/150-second timeout work are absent. Guest access, human approval/UAC and snapshot restoration are also prerequisites. |
+
+**Chosen scenario:** the synthetic checkbox application, explicitly a controller
+demo. Before-state must be independently observed Off, approved action sets On,
+and fresh fixture state must confirm On; restore Off and close cooperatively.
+These are intended assertions, not new observed before/after facts. This scenario
+does not require elevation; record UAC as not applicable instead of manufacturing
+an elevation prompt. If testing an actual privileged service action later, a human
+must handle guest UAC. No Microsoft Print to PDF installation was attempted.
+Earlier Spooler Running evidence continues to prove only service state.
+
+The suggested `vision_reads_stopped_spooler` CLI scenario expects a Services
+image named `services_spooler_stopped.png` and simulated service actions. It is
+not an appropriate assertion for the failed checkbox screenshot. Use the corrected
+Member 1 helper with Member 2's provider code for that specific capture:
+
+```powershell
+$env:PYTHONPATH = '<Member 2 checkout>\src'
+$env:TROUBLESHOOT_OLLAMA_URL = 'http://127.0.0.1:11434'
+python '<Member 1 checkout>\scripts\vm\decide-gemma-desktop.py' '<private capture JSON>' '<private report JSON>' '<private proposal JSON>'
+```
+
+Keep all three paths outside Git and use a new, private proposal output path for
+each attempt. A helper failure must prevent any downstream execution. Inspect the
+sanitized report before committing it; never commit PNG/base64 or the input capture.
+If width exceeds the limit, resize the guest window and recapture. The original
+capture must be visually checked for the intended control before interpreting a
+model result. Naming the label is a plausible prompt improvement, not a proven
+root cause or successful fix.
+
+Once Member 3 integrates the owner branches, run `python -m troubleshoot.api`
+inside the guest with `TROUBLESHOOT_OLLAMA_URL=http://10.0.2.2:11434` and
+`TROUBLESHOOT_OLLAMA_ALLOW_LAN=1`. Confirm guest reachability separately: the host
+loopback status check above does not prove the NAT address works. Run healthy
+diagnosis, approved controller action, rejected approval and cancellation. Restore
+the clean snapshot between fault scenarios and record restore success, exact merged
+revision, guest OS, model, times and independently measured before/after states.
+All four full-app cases remain pending. No host fault was injected.
+
+Member 4 handoff text is in `docs/evidence/windows/MEMBER_4_HANDOFF.md`. There is
+no identified Member 4 messaging destination in this workspace; this is a prepared
+handoff, not a claim that a direct message was delivered.
+
 8 October 2026, Asia/Calcutta. Newly authored implementation and tests; no old prototype code or validation imported.
 
 - 46 unit tests pass: the original 16 shared-boundary tests plus 30 new Windows/desktop tests covering diagnosis-only, denial/cancellation, approval binding/delay, recovery persistence, uncertain mutation, human elevation, exact arguments, shell-free transport, malformed results, reused targets, stale/future observations, moved/DPI/foreground changes, changed controls and failed postconditions.
