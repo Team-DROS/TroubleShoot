@@ -1,161 +1,339 @@
 # TroubleShoot — Team DROS
 
-A local-first Windows troubleshooting assistant being built with Gemma 4, bounded terminal/computer use, specific approvals, fresh verification and recovery.
+> A local-first Windows troubleshooting assistant being built with Gemma 4,
+> bounded terminal / computer-use actions, explicit per-action approval,
+> fresh postcondition verification and recovery.
 
-**Current:** shared contract validation, synthetic fixture and 16 unit tests. **Pending:** model adapters, agent runtime, Windows executor, backend API and UI. No working repair/demo is claimed. This is a fresh implementation in a private repository; see [provenance](docs/PROVENANCE.md).
+**Build date:** 8 October 2026 — fresh repository, no earlier prototype imported.
+**Current state:** shared contract validation + 16 unit tests ✅ — runtime pending ⏳
+**Repository:** private until explicit team authorization.
+
+---
 
 ## Team
 
-Team: Team DROS. Personal names are pending. These are assigned roles; completed contributions will be recorded from actual work.
+**Team name:** Team DROS
 
-| Member / resources | Assigned work | Branch / handoff |
-|---|---|---|
-| 1 / local Gemma + VM | Windows tools, selected-window computer use, guest validation | `member-1/windows-desktop-vm` — [assignment](docs/team/MEMBER_1.md) |
-| 2 / local Gemma | Local provider, agent reasoning and text/vision tests | `member-2/local-gemma-agent` — [assignment](docs/team/MEMBER_2.md) |
-| 3 / no local model/VM | Backend API, hosted provider, minimal UI and integration | `member-3/backend-hosted-api` — [assignment](docs/team/MEMBER_3.md) |
-| 4 / lighter role | Documentation, template alignment, demo/submission preparation | `member-4/docs-demo-submission` — [assignment](docs/team/MEMBER_4.md) |
+Member names are pending team confirmation; role slots are placeholders.
+Completed contributions are recorded in [docs/CONTRIBUTIONS.md](docs/CONTRIBUTIONS.md).
 
-Read [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md), [branch migration](docs/RESTART.md) and [shared contracts](docs/CONTRACTS.md).
+| Role | Available hardware | Branch | Assignment |
+|---|---|---|---|
+| Member 1 | Local Gemma 4 + Windows VM | `member-1/windows-desktop-vm` | Windows executor, selected-window computer use, guest validation |
+| Member 2 | Local Gemma 4 only | `member-2/local-gemma-agent` | Local Ollama provider, agent reasoning, local evidence |
+| Member 3 | No local model / VM | `member-3/backend-hosted-api` | Backend API, hosted Gemma transport, minimal UI, integration |
+| Member 4 | No local model / VM | `member-4/docs-demo-submission` | Documentation, template alignment, demo script, submission preparation |
+
+Read [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md), [AGENTS.md](AGENTS.md),
+[docs/RESTART.md](docs/RESTART.md) and [docs/CONTRACTS.md](docs/CONTRACTS.md).
+
+---
 
 ## Problem Statement
 
-Windows users often need to interpret diagnostic instructions, choose actions and check whether a symptom is fixed. Some Windows troubleshooters already perform automated repairs. We want a conversational assistant that coordinates supported tools and selected-window interaction, making action and outcome evidence visible.
+Windows users often need to interpret diagnostic output, decide on a remediation step
+and then manually verify whether the symptom is resolved. Some built-in Windows
+troubleshooters already automate narrow repairs, but they offer little visibility into
+what they are doing or why. Our goal is a **conversational, local-first assistant**
+that coordinates supported Windows tools and selected-window interaction, makes the
+action and outcome evidence visible, and keeps the user in control of every impactful
+change.
 
 ### Why We Chose This Problem
 
-Reduce manual troubleshooting effort while retaining control over impactful changes. Broad Windows support is the long-term goal; this hackathon build targets a small demonstrable workflow first.
+Manual Windows troubleshooting is time-consuming and error-prone. We want to reduce
+that effort while retaining human control over consequential actions. Broad Windows
+support is the long-term goal; this hackathon build targets one small, demonstrable
+workflow first. We do not claim "fix any Windows problem."
+
+---
 
 ## Solution
 
-Planned flow: observe relevant facts, ask Gemma for a constrained decision, validate policy, obtain needed approval, execute a registered action, collect new symptom checks and recover or report unresolved results.
+**Planned runtime flow:**
+
+1. User describes a symptom in natural language.
+2. The assistant observes relevant system facts (service state, process info, etc.).
+3. Local Gemma 4 (via Ollama) proposes a bounded, registered action.
+4. The contract layer validates the proposal — rejecting unknown operations and stale targets.
+5. The user explicitly approves the single proposed action.
+6. The Windows executor runs exactly the approved operation and immediately re-checks the symptom.
+7. The UI reports resolved / partial / unresolved with fresh evidence. Recovery is available.
+
+Local inference is the default. Text and images only leave the machine when the
+user explicitly consents to hosted Gemma inference.
 
 ### Key Features
 
-- Implemented: provider/consent and action/target validation contracts.
-- Planned: local Gemma diagnosis and optional explicit hosted Gemma.
-- Planned: bounded terminal and selected-window desktop actions.
-- Planned: approval, cancellation, verification and recovery visible in the UI.
+| Feature | Status |
+|---|---|
+| Provider / consent / action / target contract validation | ✅ Implemented (`src/troubleshoot/contracts.py`) |
+| 16 boundary unit tests (stdlib, no install) | ✅ Implemented |
+| Local Gemma 4 diagnosis via Ollama | ⏳ Planned — Member 2 |
+| Bounded terminal action (e.g. service restart) | ⏳ Planned — Member 1 |
+| Selected-window computer use with identity checks | ⏳ Planned — Member 1 |
+| Per-action approval with expiring token | ⏳ Planned — Members 1 & 3 |
+| Fresh postcondition verification | ⏳ Planned — Member 1 |
+| Cancel / undo flow | ⏳ Planned — Members 1 & 3 |
+| Loopback backend API with SSE events | ⏳ Planned — Member 3 |
+| Minimal browser UI | ⏳ Planned — Member 3 |
+| Opt-in hosted Gemma (Google AI API) | ⏳ Planned — Member 3, if key access available |
+
+---
 
 ## Innovation and Differentiation
 
-Our intended distinction is local-first conversational coordination across terminal and desktop workflows with measured outcomes. We do not claim that automated Windows repair itself is new or that this agent fixes every Windows problem.
+Our intended distinction is **local-first conversational coordination** across both
+terminal and selected-window desktop workflows, with measured, verifiable outcomes.
+Every proposed action passes a strict allow-list check; no model output can execute
+an unregistered operation. The observation is bound to the target window's identity
+(handle, PID, process start time) and expires in five seconds — ensuring the action
+applies to the window that was inspected, not one that replaced it.
+
+We do not claim that automated Windows repair is a new idea, or that this assistant
+fixes every Windows problem.
+
+---
 
 ## Technical Implementation
 
 ### Architecture
 
-Proposed runtime workflow; only the shared-contract foundation exists so far:
+Proposed runtime workflow (only the shared-contract foundation currently exists):
 
 ```mermaid
 flowchart LR
-    UI[Minimal local UI] --> API[Loopback API and session policy]
-    API --> Agent[Gemma coordinator]
-    Agent --> Provider[Local default or consented hosted model]
-    Agent --> Proposal[Validated action proposal]
-    Proposal --> Gate[Specific approval and policy]
-    Gate --> Tools[Windows or selected-window executor]
-    Tools --> Verify[Fresh symptom checks]
-    Verify --> Result[Report or recover]
+    UI[Browser UI\nloopback only] --> API[FastAPI loopback\nsession policy]
+    API --> Agent[Agent coordinator]
+    Agent --> Provider[Local Ollama\nor consented hosted Gemma]
+    Agent --> Proposal[Validated action\nproposal]
+    Proposal --> Gate[User approval\nexpiring token]
+    Gate --> Tools[Windows executor\nregistered ops only]
+    Tools --> Verify[Fresh symptom\npost-check]
+    Verify --> Result[Resolved / partial\n/ unresolved + recovery]
 ```
 
 ### Technology Stack
 
-| Category | Implemented technology / status |
-|---|---|
-| Frontend | N/A — minimal UI planned |
-| Backend | Python 3.11+ shared contracts; server not implemented |
-| Database | N/A |
-| AI / ML | N/A — Gemma 4 local/hosted adapters planned |
-| Infrastructure | N/A verified runtime — Windows/VM evidence pending |
-| APIs / Services | N/A — loopback backend and hosted Gemma transport planned |
+| Category | Implemented | Planned |
+|---|---|---|
+| Language | Python 3.11+ (standard library) | — |
+| Build | setuptools ≥ 68 | — |
+| Backend API | — | FastAPI (Member 3) |
+| Local AI | — | Ollama + Gemma 4 (Members 1 & 2) |
+| Hosted AI | — | Google Gemma API, opt-in (Member 3) |
+| Windows tools | — | pywin32 / subprocess allow-list (Member 1) |
+| Browser UI | — | Minimal HTML/JS or TypeScript/React (Member 3) |
+| Database | N/A | — |
+| Infrastructure | Git, Python runtime | Windows VM (Member 1) |
 
-### How It Works
+### How It Works (contracts layer — implemented)
 
-Current contracts reject missing/extra action fields, unknown operation names, invalid per-operation arguments, target mismatch and stale/future observations. Hosted text/image consent is explicit. Executors and session authorization still need implementation; parsing alone does not authorize input.
+The currently implemented `contracts.py` module enforces trust boundaries before
+any runtime component is reached:
+
+- **`RunRequest`** — validates complaint text, mode (`diagnose` / `repair`),
+  provider choice and explicit consent flags. Hosted inference requires
+  `cloud_consent=True`; hosted images additionally require `cloud_images_consent=True`.
+- **`parse_action`** — rejects payloads with unknown fields, unknown operation names,
+  and invalid per-operation arguments (via executor-supplied validators).
+- **`require_target`** — binds an action proposal to the exact window that was
+  observed (handle, PID, process-start timestamp) and checks observation freshness
+  (default 5-second window).
+- **`event`** — produces typed SSE event envelopes with allowed event kinds only.
+
+No model, executor, API or UI component exists yet.
 
 ### Technical Decisions
 
-Keep one provider interface, local inference as the final default, executor authority separate from model proposals and independent fresh postchecks. Development without a model uses clearly labeled fixtures; shipped runtime must never silently substitute simulated AI. The shared foundation currently uses only the Python standard library.
+- **One provider interface** — local Ollama and hosted Gemma implement the same
+  protocol; the application never silently falls back from local to hosted.
+- **Executor authority separate from model proposals** — the model cannot cause
+  execution by producing a plausible-looking payload; the executor allow-list and
+  user approval gate are deterministic.
+- **Independent postchecks** — execution `ok` means the OS accepted the command,
+  not that the symptom is resolved. A separate fresh observation determines verdict.
+- **Standard library only (current)** — the contracts module and tests require only
+  Python 3.11+ and no installation step.
+
+---
 
 ## Implementation During the Hackathon
 
-Fresh planning and hardware-specific responsibilities, shared contracts, a synthetic fixture and 16 boundary tests are recorded in this repository. No earlier application code or Git history was imported. See [validation](docs/VALIDATION.md).
+Work started from a fresh private repository on 8 October 2026.
+No source code, test, prompt, manifest, UI or compiled artifact from the team's
+earlier prototype has been imported. See [docs/PROVENANCE.md](docs/PROVENANCE.md).
+
+### What was built today
+
+- Fresh planning documents and hardware-specific responsibilities.
+- Shared contract module (`src/troubleshoot/contracts.py`) — 150 lines, stdlib only.
+- 16 boundary unit tests (`tests/unit/test_contracts.py`) — all passing.
+- Synthetic inspection fixture (`docs/fixtures/inspect_target.json`) — labeled not live.
+- Member role and branch realignment.
+- Member 4 documentation: ATTRIBUTION, CONTRIBUTIONS, DEMO_SCRIPT, SUBMISSION_CHECKLIST, TEMPLATE_GUIDE, CLAUDE updates.
 
 ### Team Contributions
 
-Actual per-person implementation contributions are pending confirmation. The role table above is an assignment, not an authorship report. Member 4 records real new commits/evidence as development proceeds.
+See [docs/CONTRIBUTIONS.md](docs/CONTRIBUTIONS.md) for the complete record.
+Individual names are pending team confirmation; role slots are used as placeholders.
+Assigned work is not a contribution claim — only completed and merged work is recorded.
+
+---
 
 ## Working Application
 
-Live application: N/A — no running app exists yet. The target is a local Windows application. Setup and judging access will be documented once verified; native-control endpoints should not be exposed publicly.
+**Live application:** N/A — no running application exists yet.
+
+The target is a local Windows application. It is not a web service; native-control
+endpoints must not be exposed publicly. Judging access will be documented as a
+local-install walkthrough once the application is implemented and verified.
+
+See [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) for the planned demo flow and
+evidence placeholders awaiting Members 1–3.
+
+---
 
 ## Demo Video
 
-Demo video: pending; none recorded or uploaded for this fresh project. Member 4 prepares a short script using newly verified team evidence.
+**Demo video:** pending — none recorded or uploaded for this fresh project.
+
+Member 4 has prepared a [structured demo script](docs/DEMO_SCRIPT.md).
+Actual recorded evidence from Members 1–3 is needed before a video can be produced.
+No old prototype footage will be reused.
+
+Link will be added here when authorized recording is available:
+> `[Demo recording — pending]`
+
+---
 
 ## Open Source and AI Usage
 
 ### AI / Models
 
-Gemma 4 through local Ollama is planned as the default, with explicit hosted Gemma support. Exact tags, account availability, model licenses and real text/image evidence are pending. No model inference is claimed for the current module.
+| Model / tool | Role | Status |
+|---|---|---|
+| Gemma 4 via local Ollama | Primary inference (local-first) | Planned — tag TBD by Member 2 |
+| Gemma via Google AI API | Opt-in hosted inference | Planned — requires explicit consent + key |
+| AI coding assistants | Development assistance | Used by team members for fresh authorship |
+
+Gemma weights are subject to the [Gemma Terms of Use](https://ai.google.dev/gemma/terms),
+separate from this application's MIT license.
+No model inference is claimed for the current module.
+All AI-assisted code was reviewed and committed by the responsible member.
 
 ### Open Source Components
 
-Python standard library is used by the current contracts/tests. Setuptools is the declared packaging build tool. Other runtime libraries and their notices will be documented as implemented. No dataset is used.
+| Component | License | Role |
+|---|---|---|
+| Python 3.11+ | PSF-2.0 | Runtime language (system install) |
+| setuptools ≥ 68 | MIT | Build backend |
+| FastAPI (planned) | MIT | Backend API server |
+| Ollama (planned) | MIT | Local model runtime |
+
+See [docs/ATTRIBUTION.md](docs/ATTRIBUTION.md) for the full component list and notices.
+No dataset is used. No model has been fine-tuned.
+
+---
 
 ## Setup and Usage
 
 ### Prerequisites
 
-Python 3.11+ and Git for the current tests. Local Gemma and VM are needed only for their assigned technical roles, not for Member 3's API development or Member 4's documentation.
+- Python 3.11+ and Git (all members).
+- Local Gemma 4 via Ollama — required only for Members 1 and 2's runtime work.
+- Windows VM — required only for Member 1's guest validation work.
+- Member 4 needs only Git, a text editor and a browser.
 
-### Installation
+### Installation (current — contracts and tests only)
 
 ```powershell
 git clone https://github.com/Team-DROS/TroubleShoot.git TroubleShoot-Event
 cd TroubleShoot-Event
+git switch member-4/docs-demo-submission   # or your assigned branch
 ```
 
 No package installation is needed for the current standard-library tests.
 
-### Environment Variables
-
-Set `PYTHONPATH` to `src` for tests. Runtime/provider/key variables are not implemented yet; Member 3 documents them and adds a placeholder-only environment example when they work. Credentials never belong in source control or frontend bundles.
-
-### Running the Project
-
-There is no application startup command yet. Run the fresh shared-contract tests:
+### Running the Contract Tests
 
 ```powershell
 $env:PYTHONPATH = Join-Path (Get-Location) 'src'
 python -m unittest discover -s tests/unit -v
 ```
 
-### Usage
+Expected: 16 tests, all OK.
 
-Use the contracts and [synthetic example](docs/fixtures/inspect_target.json) for development. Fixtures are not live inference, windows or repair results.
+### Environment Variables
+
+`PYTHONPATH=src` is needed for test discovery.
+Runtime provider / API / key variables are not implemented yet.
+Member 3 will document them and add a **placeholder-only** `.env.example` when they work.
+**Credentials must never be committed to source control or included in frontend bundles.**
+
+### Running the Application
+
+No application startup command exists yet. The above test command is the only
+runnable entry point at this time.
+
+---
 
 ## Challenges and Learnings
 
-The split now matches actual hardware. API development can proceed with dependency-injected fixtures and hosted access when available; live guest tests remain with the VM owner. Capability/consent/observation validation must be distinct from execution approval and actual repair success.
+- The hardware split now matches actual constraints: API and UI development can
+  proceed with injected fixtures and hosted access where available, while live
+  guest tests remain with the VM owner.
+- Capability validation, consent, observation freshness and execution approval
+  must be separate, independently verifiable stages — not one combined check.
+- Building from scratch under a tight deadline requires clear interface contracts
+  before any runtime component is wired.
+- The distinction between "execution returned OK" and "the symptom is resolved"
+  is critical for honest reporting and requires an independent postcheck.
+
+---
 
 ## Devpost Submission
 
-Devpost project: pending/not submitted. The supplied template has a Devpost field; the earlier event snapshot points to OrganizerHQ. Member 4 confirms the current required route and retains acceptance evidence. No portal completion is implied. See [submission checklist](docs/SUBMISSION_CHECKLIST.md).
+**Status:** Not submitted.
+
+The user-supplied template includes a Devpost demo-video field; the earlier event
+snapshot identifies OrganizerHQ. Member 4 records this difference in
+[docs/TEMPLATE_GUIDE.md](docs/TEMPLATE_GUIDE.md) and will update once the team
+confirms the current required route. No portal completion is implied by this
+placeholder. See [docs/SUBMISSION_CHECKLIST.md](docs/SUBMISSION_CHECKLIST.md).
+
+---
 
 ## Credits and License
 
-Documentation structure considers the [user-supplied hackathon template](https://github.com/BIJJUDAMA/hacktoberfest-hack-day-coimbatore-x-init-club-and-idea-club), inspected at `6d3765e3c5adb7ad708dfc4593b5365001d36d55`. See [template guide](docs/TEMPLATE_GUIDE.md). Its implementation is not copied. Application code uses the existing [MIT license](LICENSE); model weights and Windows media retain their own terms.
+Documentation structure informed by the
+[user-supplied hackathon template](https://github.com/BIJJUDAMA/hacktoberfest-hack-day-coimbatore-x-init-club-and-idea-club)
+(revision `6d3765e3c5adb7ad708dfc4593b5365001d36d55`, inspected 8 October 2026).
+See [docs/TEMPLATE_GUIDE.md](docs/TEMPLATE_GUIDE.md). No application code from
+that template has been copied.
+
+Application code: **MIT License** — see [LICENSE](LICENSE).
+Model weights and Windows installation media retain their own license terms.
+See [docs/ATTRIBUTION.md](docs/ATTRIBUTION.md) for full component and AI-usage notices.
+
+---
 
 ## Submission Checklist
 
-- [x] Project goal, initial architecture and hardware-specific role split documented.
-- [x] Fresh shared-contract tests pass.
-- [ ] Real team names and completed contributions recorded.
-- [ ] Application, actual Gemma integration and guest workflow verified.
-- [ ] Setup/run/configuration instructions verified for the implemented app.
-- [ ] Demo and final attribution documented.
-- [ ] Required submission route and acceptance confirmed.
-- [ ] Public release explicitly authorized where required.
+| Item | Status |
+|---|---|
+| Project goal, architecture, hardware-specific role split documented | ✅ |
+| Fresh repository provenance recorded | ✅ |
+| Shared-contract module and 16 unit tests authored and passing | ✅ |
+| Member 4 documentation deliverables (ATTRIBUTION, CONTRIBUTIONS, DEMO_SCRIPT, checklists) | ✅ |
+| Real member names confirmed | ⏳ Pending |
+| Windows executor implemented and guest-tested (Member 1) | ⏳ Pending |
+| Local Gemma adapter implemented and evidence recorded (Member 2) | ⏳ Pending |
+| Backend API and UI implemented (Member 3) | ⏳ Pending |
+| Integration: local-first path wired end-to-end | ⏳ Pending |
+| Demo recording with newly verified evidence | ⏳ Pending |
+| Submission portal and route confirmed | ⏳ Pending |
+| Public release explicitly authorized | 🔒 Not yet |
+| Accepted submission with receipt saved | ❌ Not submitted |
 
-Repository remains private until explicit user instruction. Submission is pending.
+Repository remains **private** until explicit user instruction.
