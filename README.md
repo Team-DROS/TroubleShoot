@@ -70,17 +70,37 @@ The project combines natural-language diagnosis with visible evidence, fixed ope
 
 ```mermaid
 flowchart TD
-    Website[Public React product website] --> Setup[Windows helper setup / local app link]
-    Setup --> PWA[Browser PWA on loopback]
-    PWA -->|Session authentication and SSE| API[FastAPI Windows helper]
-    API -->|Explicit per-run cloud text consent| Gemma[Hosted Gemma API]
-    Gemma --> Proposal[Structured action proposal]
-    Proposal --> Policy[Allowlist / arguments / target checks]
-    Policy --> Approval[Specific human approval for mutation]
-    Approval --> Native[Fixed PowerShell native worker]
-    Native --> Checks[Fresh postchecks / recovery record]
-    Checks --> PWA
-    Experimental[Experimental local Ollama / Gemma adapter]
+    User["User describes a Windows problem"] --> PWA["TroubleShoot PWA"]
+    Website["Product website"] --> Setup["Start local Windows helper"]
+    Setup --> PWA
+
+    PWA -->|"Session token"| API["FastAPI backend"]
+    API --> Observe["Gather fresh Windows evidence"]
+    Observe --> Consent{"Cloud text consent?"}
+
+    Consent -->|No| Stop["Stop without sending data"]
+    Consent -->|Yes| Gemma["Hosted Gemma 4"]
+    Gemma --> Decision{"Proposed action?"}
+
+    Decision -->|No| Diagnosis["Show diagnosis and evidence"]
+    Decision -->|Yes| Policy["Validate operation, arguments and target"]
+    Policy --> Refresh["Refresh target identity and freshness"]
+    Refresh --> Approval{"User approves exact action?"}
+
+    Approval -->|Reject or cancel| Cancelled["End without executing"]
+    Approval -->|Approve| Checks{"Authorization and target checks pass?"}
+    Checks -->|No| Blocked["Block action"]
+    Checks -->|Yes| Execute["Run bounded PowerShell operation"]
+
+    Execute --> Verify["Collect fresh postchecks"]
+    Verify --> Result["Resolved / Partial / Unresolved"]
+    Execute -->|"Failure or uncertain outcome"| Recovery["Record recovery state"]
+
+    Diagnosis --> PWA
+    Result --> PWA
+    Recovery --> PWA
+    Blocked --> PWA
+    Cancelled --> PWA
 ```
 
 Hosted Gemma is the only provider wired into the current production launcher. Local Ollama remains available in source and recorded experiments, not as the production default or an automatic fallback. The website does not remotely control Windows: the helper must be running locally. Credentials stay in the backend. Native target identity and the five-second freshness rule remain enforced.
