@@ -1,0 +1,17 @@
+/* Latin-only, self-hosted WOFF2. No third-party font requests. */
+@font-face {
+  font-family: 'Space Grotesk Variable';
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url('../node_modules/@fontsource-variable/space-grotesk/files/space-grotesk-latin-wght-normal.woff2')
+    format('woff2');
+}
+@font-face {
+  font-family: 'DM Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../node_modules/@fontsource/dm-mono/files/dm-mono-latin-400-normal.woff2')
+    format('woff2');
+}
