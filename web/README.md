@@ -22,6 +22,21 @@ npm run format:check
 
 The build emits `web/dist/`. Serve that directory with any static server; there is no server runtime, environment variable, or API key needed for this preview. This build assumes hosting at the origin root. Configure Vite's `base` before hosting under a subdirectory.
 
+## Vercel deployment
+
+Production: https://troubleshoot-one.vercel.app
+
+Vercel project: `umasuthanpalaniappan/troubleshoot`. The frontend was deployed from the `frontend` branch with `web/` as the CLI working directory. `vercel.json` specifies Vite, `npm ci`, `npm run build`, and `dist` output. No application environment variables are needed.
+
+To redeploy from `web/` after signing in:
+
+```powershell
+npm exec --yes --package=vercel@63.1.0 -- vercel link --yes --project troubleshoot --scope umasuthanpalaniappan
+npm exec --yes --package=vercel@63.1.0 -- vercel deploy --prod --yes --scope umasuthanpalaniappan
+```
+
+This is a CLI deployment; automatic GitHub deployments are not configured. If connecting GitHub later, select repository `Team-DROS/TroubleShoot`, root directory `web`, and production branch `frontend`. Keep `.vercel/` and generated `.env*` files out of Git.
+
 ## What works
 
 - Responsive landing page, original diagnostic-core SVG, self-hosted typography, restrained motion, FAQ, mobile navigation, and keyboard-operable workflow tabs.
