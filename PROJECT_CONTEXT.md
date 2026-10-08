@@ -1,3 +1,14 @@
+# Current shipped scope: hosted Gemma API + Windows PWA
+
+Latest user authorization: integrate across all member paths on `integration/api-pwa`.
+Production enables hosted Gemma only. The PWA connects to an authenticated Windows
+loopback helper; per-run cloud consent, approval, human UAC, fresh checks and recovery
+remain required. Keys are server-side. No old prototype is reused. Repo stays private.
+See docs/API_PWA.md for current setup and evidence. Earlier local-first planning below
+is retained for history and superseded by this scope where it conflicts.
+
+---
+
 # TroubleShoot — complete from-scratch project context
 
 Updated 8 October 2026, Asia/Calcutta. **Member 3 integration update: Member 2 `6ed184b` and Member 1 `3edf350` are merged into the authenticated API/session runtime. Local decision timeout defaults to 150 seconds; production run budget is 300 seconds. A persistent bounded PowerShell transport removes repeated startup without changing five-second freshness. CheckboxRecovery is wired for explicit programmatic verifier injection; production desktop changes stay disabled. Member 1's real Gemma/guest checkbox harness passed on a synthetic UI, while its vision run blocked and print probe lacked a printer. Authenticated API/UI guest execution and hosted inference remain pending. Member 3's unit/API/UI tests and actual native read-only smoke pass; this PC has no reachable local Gemma.** Read AGENTS.md, the rules snapshot, docs/PROVENANCE.md, docs/RESTART.md and your member assignment.
