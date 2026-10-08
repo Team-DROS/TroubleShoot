@@ -7,7 +7,10 @@ name = "troubleshoot-agent"
 version = "0.1.0"
 description = "Bounded Windows troubleshooting with Gemma"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = ["fastapi==0.142.4", "uvicorn==0.54.0", "httpx==0.28.1"]
+
+[project.scripts]
+troubleshoot = "troubleshoot.api.__main__:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
