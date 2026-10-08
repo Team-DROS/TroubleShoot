@@ -107,3 +107,23 @@ class HostedTests(unittest.IsolatedAsyncioTestCase):
         payload = request(mode="diagnose")
         payload["operations"] = {"spooler_status": {"mutates": False}, "start_spooler": {"mutates": True}}
         await GemmaAPI("fake", transport=httpx.MockTransport(handler)).decide(payload)
+
+
+    async def test_temporary_busy_retries_once_then_accepts_valid_decision(self):
+        calls = []
+        def handler(req):
+            calls.append(req)
+            return httpx.Response(503) if len(calls) == 1 else httpx.Response(200, json=response())
+        provider = GemmaAPI("fake", transport=httpx.MockTransport(handler))
+        self.assertIsNone((await provider.decide(request()))["action"])
+        self.assertEqual(len(calls), 2)
+
+    async def test_persistent_busy_stops_after_two_attempts(self):
+        calls = []
+        def handler(req):
+            calls.append(req)
+            return httpx.Response(503)
+        with self.assertRaises(RuntimeFailure) as caught:
+            await GemmaAPI("fake", transport=httpx.MockTransport(handler)).decide(request())
+        self.assertEqual(caught.exception.code, "hosted_busy")
+        self.assertEqual(len(calls), 2)

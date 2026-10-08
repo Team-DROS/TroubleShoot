@@ -19,7 +19,7 @@ function harness(fetch) {
   }
   element('provider').value = 'ollama'; element('mode').value = 'diagnose';
   const context = vm.createContext({
-    document: { getElementById: element, createElement: () => ({ textContent: '' }) },
+    document: { getElementById: element, createElement: () => ({ textContent: '', children: [], append(...items) { this.children.push(...items); } }) },
     Option: function(text, value) { this.textContent = text; this.value = value; },
     fetch, TextDecoder, console, URLSearchParams,
     window: { addEventListener() {} }, navigator: {},
@@ -79,4 +79,22 @@ test('SSE handles split Unicode chunks and terminal event', async () => {
   await h.run(`runId='synthetic'; streamEvents('synthetic')`);
   assert.equal(h.element('limitations').textContent, 'Synthetic ✓');
   assert.equal(h.element('result').hidden, false);
+});
+
+
+test('diagnosis text is visible and per-run cloud consent resets after completion', () => {
+  const h = harness();
+  h.element('cloud').checked = true;
+  h.run(`receive({id:'1',type:'plan',payload:{summary:'Spooler is running; print not verified.',action:null}})`);
+  assert.match(h.element('diagnosis').textContent, /print not verified/);
+  h.run(`receive({id:'2',type:'complete',payload:{verdict:'unresolved',recovery:'none',limitations:[],simulation:false}})`);
+  assert.equal(h.element('cloud').checked, false);
+});
+
+test('offline state disables new inference and explains the helper requirement', () => {
+  const h = harness();
+  h.element('provider').value = 'gemma_api'; h.element('cloud').checked = true;
+  h.run(`status={providers:{gemma_api:{configured:true}}}; navigator.onLine=false; networkChanged()`);
+  assert.equal(h.element('start').disabled, true);
+  assert.match(h.element('connection-notice').textContent, /Windows helper/);
 });

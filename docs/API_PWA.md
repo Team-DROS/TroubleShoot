@@ -23,9 +23,9 @@ fresh manual session connection. Select system diagnostics, describe the complai
 check cloud consent and start. Images are disabled in this prototype.
 
 Chrome/Edge may offer Install through their menu; an in-page button appears when
-the browser exposes beforeinstallprompt. Manifest, 192/512 PNG icons and a network-only
-service worker are included. No diagnostic data or secrets are cached. Offline
-troubleshooting is unavailable. Keep the helper running. A PWA cannot repair Windows
+the browser exposes beforeinstallprompt. Manifest, 192/512 PNG icons and a public-shell-only caching
+service worker are included. Only static app files are cached; diagnostic data and secrets are never cached.
+The shell can open offline, but offline troubleshooting is unavailable. Keep the helper running. A PWA cannot repair Windows
 without that helper. The separate web/ React landing preview is not the operator UI.
 
 ## Demo scope and limits
@@ -72,3 +72,17 @@ diagnosis excludes mutating choices before inference.
 
 Validated implementation commit: `71aefb76fccfd21cbc405bb27a820098e2de7f06`.
 Official Gemma thinking options: https://ai.google.dev/gemma/docs/core/gemma_on_gemini_api
+
+
+## PWA usability and provider recovery update
+
+Printing/system diagnosis shortcuts, readable fact summaries, expandable evidence,
+visible Gemma explanation, offline guidance and renewed per-run cloud consent are
+implemented. The public app shell can open offline; inference still requires internet
+and the Windows helper. API responses and credentials are never cached.
+Temporary HTTP 502/503/504 inference failures get one cancellable retry; authentication
+and quota failures do not. Errors now distinguish connection failures and busy/gateway
+responses. The reported hosted_unavailable failure could not be reproduced: a fresh
+key check returned HTTP 200, and a fresh real read-only diagnosis completed successfully.
+Eleven hosted-provider tests and seven synthetic console UI tests passed for this update.
+These checks do not prove live installation or a successful print.

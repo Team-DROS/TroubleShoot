@@ -1,7 +1,21 @@
 const $ = id => document.getElementById(id);
 let token = "", status = null, runId = null, approval = null, starting = false, lastEventId = "0";
 
-function showError(message) { $("error").textContent = message; $("error").hidden = false; }
+const errorHelp = {
+  unauthorized: "Session expired or incorrect. Reopen the Windows launcher to reconnect.",
+  missing_api_key: "Set up the API key with scripts/configure-api.ps1, then restart the helper.",
+  hosted_unavailable: "Gemma is temporarily unavailable. No verified repair. Start a new diagnosis to retry.",
+  hosted_busy: "Gemma is busy after a retry. Wait briefly, then start a new diagnosis.",
+  hosted_gateway_unavailable: "The Gemma gateway is unavailable after a retry. Try again shortly.",
+  hosted_gateway_timeout: "The Gemma gateway timed out after a retry. Try a new diagnosis.",
+  hosted_connection_failed: "Cannot connect to Google. Check internet access and the helper's network permissions.",
+  hosted_quota: "The Gemma API quota is exhausted. Try later or check your Google AI Studio account.",
+  hosted_timeout: "Gemma took too long to respond. No verified repair; try a new diagnosis.",
+  hosted_auth_failed: "Google rejected the API key. Configure the key again locally.",
+  invalid_approval: "This approval expired or was already used. Start a new run for fresh evidence.",
+  recovery_required: "An earlier change needs recovery inspection before another repair.",
+};
+function showError(message) { message = errorHelp[message] || message; $("error").textContent = message; $("error").hidden = false; }
 function clearError() { $("error").hidden = true; }
 
 async function api(path, options = {}) {
@@ -20,7 +34,7 @@ function updateControls() {
   $("provider-status").textContent = provider
     ? `Model: ${provider.model || "not configured"} · ${provider.readiness}${status.simulation ? " · SYNTHETIC FIXTURE" : ""}`
     : "Connect to check provider readiness.";
-  $("start").disabled = starting || Boolean(runId) || !provider?.configured ||
+  $("start").disabled = navigator.onLine === false || starting || Boolean(runId) || !provider?.configured ||
     ($("provider").value === "gemma_api" && !$("cloud").checked);
   $("start").textContent = $("mode").value === "repair" ? "Start repair review" : "Start diagnosis";
   $("stop").disabled = !runId;
@@ -38,6 +52,7 @@ $("connect").addEventListener("submit", async event => {
     const system = targets.targets.find(item => item.scope === "system");
     if (system) $("target").value = JSON.stringify(system.target);
     $("target-status").textContent = targets.available ? "Select a permitted target for observed actions." : "Native window integration is pending.";
+    $("connection-notice").hidden = true;
     $("status").textContent = status.simulation ? "Connected · SYNTHETIC FIXTURE; no real repair" : "Connected to the local API";
     $("token").value = "";
   } catch (error) { token = ""; status = null; $("status").textContent = "Connection failed"; showError(error.message); }
@@ -49,7 +64,20 @@ function receive(item) {
   lastEventId = item.id;
   const row = document.createElement("li");
   const safePayload = { ...item.payload }; delete safePayload.token;
-  row.textContent = `${item.type} · ${JSON.stringify(safePayload)}`;
+  const labels = { observation: "Fresh device facts", plan: "Gemma diagnosis", approval: "Your approval needed",
+    action: "Execution result", verification: "Fresh outcome checks", complete: "Run finished", error: "Run could not finish" };
+  row.textContent = labels[item.type] || item.type;
+  const detail = document.createElement("details"), heading = document.createElement("summary"), content = document.createElement("pre");
+  heading.textContent = "View evidence"; content.textContent = JSON.stringify(safePayload, null, 2);
+  detail.append(heading, content); row.append(detail);
+  $("progress").textContent = labels[item.type] || item.type;
+  if (item.type === "plan") $("diagnosis").textContent = item.payload.summary;
+  if (item.type === "observation") {
+    const facts = item.payload.facts || {};
+    const summary = document.createElement("p");
+    summary.textContent = [facts.os?.os, facts.spooler?.status ? `Print Spooler: ${facts.spooler.status}` : ""].filter(Boolean).join(" · ") || "Fresh selected-target observation collected.";
+    row.append(summary);
+  }
   $("timeline").append(row); $("empty").hidden = true;
   if (item.type === "approval") {
     approval = item.payload; $("approval").hidden = false;
@@ -63,6 +91,7 @@ function receive(item) {
     $("verdict").textContent = `${item.payload.verdict}${item.payload.simulation ? " (synthetic fixture)" : ""}`;
     $("recovery").textContent = `Recovery: ${item.payload.recovery}`;
     $("limitations").textContent = item.payload.limitations.join(" ");
+    $("cloud").checked = false;
     runId = null; approval = null; $("approval").hidden = true; $("reconnect").hidden = true; updateControls();
   }
 }
@@ -92,6 +121,7 @@ async function streamEvents(id) {
 $("run-form").addEventListener("submit", async event => {
   event.preventDefault(); if (runId || starting) return; clearError(); starting = true; lastEventId = "0";
   $("start").disabled = true;
+  $("diagnosis").textContent = ""; $("progress").textContent = "Collecting fresh facts and asking Gemma…";
   $("timeline").replaceChildren(); $("empty").hidden = false; $("result").hidden = true;
   try {
     const result = await (await api("/api/runs", { method: "POST", body: JSON.stringify({
@@ -149,3 +179,23 @@ if (initialSession) {
   $("token").value = initialSession;
   $("connect").requestSubmit();
 }
+
+$("check-print").addEventListener("click", () => {
+  if (runId || starting) return;
+  $("complaint").value = "Check the Print Spooler service health. Explain what these facts prove and whether a test print is still needed.";
+  $("mode").value = "diagnose"; updateControls();
+});
+$("check-system").addEventListener("click", () => {
+  if (runId || starting) return;
+  $("complaint").value = "Review the observed Windows version, available memory and disk space. Diagnose only and distinguish observations from possible causes.";
+  $("mode").value = "diagnose"; updateControls();
+});
+function networkChanged() {
+  const offline = navigator.onLine === false;
+  $("connection-notice").hidden = !offline;
+  $("connection-notice").textContent = "You are offline. The app can open, but hosted Gemma needs internet and the Windows helper must be running.";
+  updateControls();
+}
+window.addEventListener("offline", networkChanged);
+window.addEventListener("online", networkChanged);
+networkChanged();

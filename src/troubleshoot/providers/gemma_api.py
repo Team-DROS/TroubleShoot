@@ -1,5 +1,6 @@
 """Explicit hosted Gemma REST transport. Never installs or falls back to a model."""
 
+import asyncio
 import base64
 import json
 import os
@@ -83,20 +84,28 @@ class GemmaAPI:
         try:
             async with httpx.AsyncClient(timeout=60, follow_redirects=False,
                                          trust_env=False, transport=self.transport) as client:
-                async with client.stream("POST", url, json=body,
-                        headers={"x-goog-api-key": self.key}) as response:
-                    if response.status_code != 200:
-                        codes = {400: "hosted_request_rejected", 401: "hosted_auth_failed",
-                                 403: "hosted_auth_failed", 404: "model_unavailable",
-                                 429: "hosted_quota"}
-                        raise RuntimeFailure(codes.get(response.status_code, "hosted_unavailable"))
-                    chunks = bytearray()
-                    async for chunk in response.aiter_bytes():
-                        chunks.extend(chunk)
-                        if len(chunks) > 65_536:
-                            raise RuntimeFailure("hosted_response_too_large")
+                for attempt in range(2):
+                    async with client.stream("POST", url, json=body,
+                            headers={"x-goog-api-key": self.key}) as response:
+                        if response.status_code in (502, 503, 504) and attempt == 0:
+                            await asyncio.sleep(0.8)
+                            continue
+                        if response.status_code != 200:
+                            codes = {400: "hosted_request_rejected", 401: "hosted_auth_failed",
+                                     403: "hosted_auth_failed", 404: "model_unavailable",
+                                     429: "hosted_quota", 502: "hosted_gateway_unavailable",
+                                     503: "hosted_busy", 504: "hosted_gateway_timeout"}
+                            raise RuntimeFailure(codes.get(response.status_code, "hosted_unavailable"))
+                        chunks = bytearray()
+                        async for chunk in response.aiter_bytes():
+                            chunks.extend(chunk)
+                            if len(chunks) > 65_536:
+                                raise RuntimeFailure("hosted_response_too_large")
+                    break
         except httpx.TimeoutException:
             raise RuntimeFailure("hosted_timeout") from None
+        except httpx.ConnectError:
+            raise RuntimeFailure("hosted_connection_failed") from None
         except httpx.HTTPError:
             raise RuntimeFailure("hosted_unavailable") from None
         try:
