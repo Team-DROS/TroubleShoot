@@ -59,11 +59,11 @@ const workflow = [
 const faqs = [
   [
     'Can I use this to repair my computer today?',
-    'This is an interactive frontend preview. You can explore the workflow with sample printer, audio, and network scenarios. The local model, Windows executor, and API are still being developed; this website cannot inspect or change your device.',
+    'This is an interactive frontend preview. You can explore the workflow with sample printer, audio, and network scenarios. The real TroubleShoot app runs locally on Windows: local Gemma proposes one bounded action, you approve it, and fresh checks verify the result. It is an early build tested on sample and virtual-machine scenarios. This website is only a preview and cannot inspect or change your device.',
   ],
   [
     'What stays on my computer?',
-    'The planned default uses local Gemma through Ollama. An optional hosted mode will require explicit consent before sending text, with a separate choice for images. This preview runs entirely in your browser and does not send your scenario input to a server.',
+    'The default uses local Gemma through Ollama, so prompts stay on your computer. The optional hosted mode requires explicit consent before sending text, with a separate choice for images. This preview runs entirely in your browser and does not send your scenario input to a server.',
   ],
   [
     'What will TroubleShoot be allowed to change?',
