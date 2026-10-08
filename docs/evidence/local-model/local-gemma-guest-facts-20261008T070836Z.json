@@ -1,0 +1,74 @@
+{
+  "kind": "local-gemma-guest-facts",
+  "label": "REAL local inference on facts copied from Member 1's RECORDED Windows guest evidence (desktop-2026-10-08.json source_commit f4d5838, service-2026-10-08.json source_matching_commit 6ad86df). Decisions only; nothing was executed and this is not a live guest run.",
+  "recorded_at": "2026-10-08T07:08:36.076291+00:00",
+  "revision": "03cc588",
+  "provider": {
+    "configured": true,
+    "readiness": "responding",
+    "model": "gemma4:e2b",
+    "images": true,
+    "locality": "local",
+    "structured_output": "json-schema constrained decoding",
+    "detail": null
+  },
+  "passed": 3,
+  "total": 3,
+  "results": [
+    {
+      "case": "printer_guest_fault",
+      "mode": "repair",
+      "complaint": "Documents are stuck and nothing prints.",
+      "chosen_operation": "start_spooler",
+      "acceptable": [
+        "spooler_status",
+        "start_spooler"
+      ],
+      "passed": true,
+      "summary": "The Print Spooler service is currently stopped, which is likely causing the documents to get stuck and nothing to print. Expected change: The Print Spooler service status should change from 'Stopped' to 'Running'.",
+      "metrics": {
+        "provider": "ollama",
+        "model": "gemma4:e2b",
+        "latency_ms": 36496,
+        "prompt_tokens": 712,
+        "output_tokens": 189
+      }
+    },
+    {
+      "case": "slow_guest_diagnose",
+      "mode": "diagnose",
+      "complaint": "This PC feels slow and is running out of space.",
+      "chosen_operation": "system_snapshot",
+      "acceptable": [
+        "system_snapshot"
+      ],
+      "passed": true,
+      "summary": "The user reports the PC feels slow and is running out of space. The system snapshot shows the drive C: has 33,606,758,400 bytes free out of a total size of 67,921,506,304 bytes. This is approximately 50% free space, which could contribute to slowness if the drive is nearly full. Expected change: The output from system_snapshot will provide CPU, memory, and detailed drive space information.",
+      "metrics": {
+        "provider": "ollama",
+        "model": "gemma4:e2b",
+        "latency_ms": 52475,
+        "prompt_tokens": 672,
+        "output_tokens": 277
+      }
+    },
+    {
+      "case": "printer_guest_diagnose",
+      "mode": "diagnose",
+      "complaint": "Documents are stuck and nothing prints.",
+      "chosen_operation": "spooler_status",
+      "acceptable": [
+        "spooler_status"
+      ],
+      "passed": true,
+      "summary": "The Print Spooler service is currently stopped, which is the likely cause of documents getting stuck and nothing printing. Expected change: The output of spooler_status will confirm the status of the Print Spooler service.",
+      "metrics": {
+        "provider": "ollama",
+        "model": "gemma4:e2b",
+        "latency_ms": 39635,
+        "prompt_tokens": 681,
+        "output_tokens": 195
+      }
+    }
+  ]
+}

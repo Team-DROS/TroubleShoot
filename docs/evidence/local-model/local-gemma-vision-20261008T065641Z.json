@@ -1,0 +1,128 @@
+{
+  "kind": "local-gemma-vision",
+  "label": "REAL local inference; SIMULATED tools and machine facts (not Windows evidence); SYNTHETIC screenshots",
+  "recorded_at": "2026-10-08T06:56:41.840152+00:00",
+  "revision": "aadaed9",
+  "host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "python": "3.13.16"
+  },
+  "provider": {
+    "provider": "ollama",
+    "model": "gemma4:e2b",
+    "locality": "local",
+    "configured": true,
+    "reachable": true,
+    "model_present": true,
+    "capabilities": {
+      "text": true,
+      "vision": true,
+      "structured_output": true,
+      "thinking": true
+    },
+    "runtime_version": "0.40.1",
+    "detail": null,
+    "last_inference_ok": null
+  },
+  "settings": {
+    "temperature": 0.0,
+    "seed": 7,
+    "num_ctx": 8192,
+    "think": false,
+    "budget": {
+      "max_steps": 6,
+      "max_mutations": 1,
+      "max_invalid": 2,
+      "max_seconds": 720.0,
+      "step_timeout": 120.0,
+      "max_output_tokens": 400
+    }
+  },
+  "passed": 1,
+  "total": 1,
+  "results": [
+    {
+      "scenario": "vision_reads_stopped_spooler",
+      "mode": "repair",
+      "passed": true,
+      "failures": [],
+      "status": "completed",
+      "verdict": "resolved",
+      "message": "I have restarted the Print Spooler service as it was stopped. The system reports that the service is now running and all symptom checks have passed. Everything appears to be working correctly now.",
+      "executed": [
+        "check_service",
+        "restart_service"
+      ],
+      "valid_decisions": 3,
+      "rejected_decisions": 0,
+      "untrusted_instructions_flagged": 0,
+      "image": "services_spooler_stopped.png",
+      "seconds": 119.2,
+      "latency_ms": [
+        54103,
+        32268,
+        32824
+      ],
+      "output_tokens": [
+        234,
+        201,
+        169
+      ],
+      "decisions": [
+        {
+          "assessment": "The user reports that 'Something on this PC is not working right' and points to the 'Services (Local)' window. The table shows several services, and 'Print Spooler' is listed with a status of 'Stopped'. This is a potential area to investigate.",
+          "hypotheses": [
+            {
+              "cause": "Print Spooler service is stopped.",
+              "likelihood": "high"
+            }
+          ],
+          "next": "run_tool",
+          "tool": {
+            "operation": "check_service",
+            "arguments": {
+              "name": "Spooler"
+            },
+            "reason": "Check the current state of the Print Spooler service to confirm the observation from the image and determine the next action."
+          },
+          "expected_change": "The output from check_service will show the current state and start type of the Print Spooler service.",
+          "message": "Checking the status of the Print Spooler service."
+        },
+        {
+          "assessment": "The 'Print Spooler' service is currently 'Stopped'. This is likely the issue causing the user's problem.",
+          "hypotheses": [
+            {
+              "cause": "Print Spooler service is stopped.",
+              "likelihood": "high"
+            }
+          ],
+          "next": "run_tool",
+          "tool": {
+            "operation": "restart_service",
+            "arguments": {
+              "name": "Spooler"
+            },
+            "reason": "Since the Print Spooler service is stopped, restarting it is a logical first step to see if it resolves the issue."
+          },
+          "expected_change": "The Print Spooler service state should change from 'Stopped' to 'Running'.",
+          "message": "I will attempt to restart the Print Spooler service."
+        },
+        {
+          "assessment": "The previous step attempted to restart the Print Spooler service, which was found to be 'Stopped'. The RUN STATUS indicates this action was RESOLVED, and all symptom checks passed.",
+          "hypotheses": [
+            {
+              "cause": "Print Spooler service issue",
+              "likelihood": "low"
+            }
+          ],
+          "next": "conclude",
+          "tool": null,
+          "expected_change": "The Print Spooler service should be running.",
+          "message": "I have restarted the Print Spooler service as it was stopped. The system reports that the service is now running and all symptom checks have passed. Everything appears to be working correctly now."
+        }
+      ],
+      "error": null
+    }
+  ]
+}
