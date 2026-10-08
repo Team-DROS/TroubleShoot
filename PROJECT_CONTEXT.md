@@ -151,3 +151,9 @@ Member 4 follows docs/TEMPLATE_GUIDE.md and the user-supplied hackathon reposito
 Member 4 considers https://github.com/BIJJUDAMA/hacktoberfest-hack-day-coimbatore-x-init-club-and-idea-club, inspected at revision `6d3765e3c5adb7ad708dfc4593b5365001d36d55` on 8 October 2026. Relevant README/agent guidance is mapped in docs/TEMPLATE_GUIDE.md. We adapt documentation structure, preserve our project goal and implementation paths, and keep working/pending status explicit.
 
 The template includes demo-video and Devpost sections, while the earlier event snapshot describes OrganizerHQ. Member 4 records both and confirms current submission expectations; no portal, upload or publication is inferred from a template placeholder. Local Windows control does not need a hosted public control endpoint just to fill a live-app link.
+
+
+## Latest publication instruction
+The user explicitly authorized merging all fresh team work into main and making
+this repository public. This supersedes earlier private-until-instructed language.
+Keep secrets, raw private evidence and machine-local data excluded from Git.

@@ -36,9 +36,10 @@ web/ React landing preview is retained; the working UI is src/troubleshoot/api/c
 
 ## Team and event-time work
 
-Member 1: Windows/desktop tools and guest validation. Member 2: local provider and
-reasoning. Member 3: API/session/hosted integration. Member 4: lighter documentation
-and template preparation. Final user-directed integration changes the shipped runtime
+Pranesh Subramanian (Member 1): Windows/desktop tools and guest validation.
+Umasuthan Palaniappan (Member 2): local provider and reasoning.
+Srinath Balakrishnan (Member 3): API/session/hosted integration.
+Sanjeev Singotam (Member 4): documentation and template preparation. Final user-directed integration changes the shipped runtime
 to hosted-only PWA. Names, actual submission and demo-video links await the team.
 
 ## Lessons, credits and limits
@@ -47,5 +48,5 @@ Model proposals, native execution and symptom resolution require separate valida
 PWA installation still requires a Windows helper and internet for inference.
 See [provenance](docs/PROVENANCE.md), [attribution](docs/ATTRIBUTION.md),
 [context](PROJECT_CONTEXT.md) and [submission checklist](docs/SUBMISSION_CHECKLIST.md).
-This is the fresh event implementation. Repo stays private; no submission or upload
-is claimed. Confirm template and event requirements before release.
+This is the fresh event implementation. The user authorized public release after merging all team work into main.
+No event submission or demo-video upload is claimed. Confirm template and event requirements before release.

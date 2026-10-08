@@ -101,3 +101,13 @@ Live selected-window capture was supplied to the same real Gemma vision provider
 Original print symptom: live guest probe confirmed Spooler Running but no printer configured, no Microsoft Print to PDF driver or matching local driver package. The new bounded PDF print probe therefore reports blocked, with both PDF/physical print verification false. Report: `print-probe-2026-10-08.json`. No driver installation, external print or new service fault was performed. A configured printer and independently checked output are still prerequisites for a print-repair success claim.
 
 73 unit tests pass (8 added recovery cases); fresh Python compilation and PowerShell parsing pass. `CheckboxRecovery` persists a baseline before input and offers conditional, newly approved restoration. See `RECOVERY.md`. The helper's Python journal/API wiring was not live-tested inside the guest. Keep user-facing desktop changes disabled until Member 3 integrates these gates and a chosen real workflow's original-symptom verifier. Vision/API/live print remain pending. Demo recording remains deferred.
+
+
+## Final integration update
+
+All technical member branches and frontend are incorporated in integration/api-pwa.
+Hosted Gemma read-only Windows diagnosis passed; 156 unit, 42 API/runtime and
+5 synthetic console checks passed. See docs/API_PWA.md and
+ docs/evidence/hosted/api-pwa-diagnosis.json. Earlier not-implemented and local-first
+statements above are dated historical checkpoints. Full hosted guest repair,
+browser installation and actual print verification remain pending.

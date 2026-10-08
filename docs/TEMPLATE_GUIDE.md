@@ -1,33 +1,101 @@
+> Final integration update, 8 October 2026: all four members' fresh work is being
+> consolidated into main. Current production is hosted Gemma API + Windows PWA,
+> with real read-only inference evidence and 203 passing checks. Earlier pending
+> entries below are historical planning/checkpoints, not current feature status.
+> See README.md, docs/API_PWA.md and docs/evidence/hosted/api-pwa-diagnosis.json.
+> The user authorized public release; no event submission/video upload is claimed.
+
 # User-supplied hackathon template guide
 
-Owner: Member 4. Source: https://github.com/BIJJUDAMA/hacktoberfest-hack-day-coimbatore-x-init-club-and-idea-club
+Owner: Member 4.
+Source: https://github.com/BIJJUDAMA/hacktoberfest-hack-day-coimbatore-x-init-club-and-idea-club
+Inspected 8 October 2026 at revision `6d3765e3c5adb7ad708dfc4593b5365001d36d55`.
+Files inspected: README.md, AGENTS.md, CLAUDE.md.
 
-Inspected 8 October 2026 at revision `6d3765e3c5adb7ad708dfc4593b5365001d36d55`. Files inspected: README.md, AGENTS.md, CLAUDE.md. This is the template supplied by the user; current organizer directions and our project constraints still govern eligibility and release.
+This is the template supplied by the user. Current organizer directions and our
+project constraints still govern eligibility, release and submission.
+
+---
 
 ## What to apply
 
-Use its README structure to cover the problem/motivation, solution, differentiation, architecture/stack, event-time work/team contributions, application/demo access, AI/components, reproducible setup, lessons and credits/license. Mark absent technologies N/A and pending evidence clearly. Maintain honest claims, meaningful external attribution, focused implementation and safe credential handling. Keep organizer-only information out of the project README. The template's Claude file points to its agent instructions; our CLAUDE.md similarly uses our own AGENTS.md.
+Use the template's README structure to cover:
+- Problem / motivation
+- Solution and key differentiators
+- Architecture and technology stack
+- Event-time work and team contributions
+- Application / demo access
+- AI components and open-source usage
+- Reproducible setup
+- Lessons and challenges
+- Credits and license
+
+Mark absent technologies **N/A** and pending evidence **pending/not yet recorded**.
+Maintain honest claims, meaningful external attribution, focused implementation
+and safe credential handling. Keep organizer-only information out of the README.
+The template's CLAUDE.md points to its agent instructions; our `CLAUDE.md`
+similarly delegates to `AGENTS.md`.
+
+---
 
 ## Our project mapping
 
-- Windows/desktop/guest results: ask Member 1.
-- Local Gemma/provider/reasoning evidence: ask Member 2.
-- Backend/hosted/UI/setup facts: ask Member 3.
-- Keep the local-first Windows troubleshooting objective; the template is a documentation guide, not a replacement application or requirement for a new architecture.
-- Our README already has the relevant structure. Fill real names and completed contributions as the team supplies them; assigned work is not a contribution claim.
-- Do not import upstream application code or expand Member 4's role into technical development/video production.
+| Template section | Our content source |
+|---|---|
+| Problem / motivation | README.md §Problem Statement |
+| Solution / key features | README.md §Solution, §Key Features |
+| Differentiation | README.md §Innovation and Differentiation |
+| Architecture / stack | README.md §Technical Implementation |
+| Event-time work | README.md §Implementation During the Hackathon + CONTRIBUTIONS.md |
+| Working app / demo | README.md §Working Application + DEMO_SCRIPT.md |
+| AI components | README.md §Open Source and AI Usage + ATTRIBUTION.md |
+| Setup | README.md §Setup and Usage |
+| Challenges / learnings | README.md §Challenges and Learnings |
+| Credits / license | README.md §Credits and License + ATTRIBUTION.md |
+| Devpost / demo video | README.md §Demo Video + DEMO_SCRIPT.md |
+
+**Windows/desktop/guest evidence:** ask Member 1.
+**Local Gemma/provider/reasoning evidence:** ask Member 2.
+**Backend/hosted/UI/setup facts:** ask Member 3.
+
+Do not import upstream application code or expand Member 4's role into technical
+development or video production.
+
+---
 
 ## Submission differences to resolve
 
-The template includes Devpost/demo-video entries; the earlier event snapshot identifies OrganizerHQ and an optional demo URL. Record this difference and confirm the current route, required media and whether both portals are needed. Template placeholders do not prove a submission requirement or successful submission. Prepare a short demo script and request team-provided evidence; no uploads, publication or form submission is authorized by this role change.
+The template includes a **Devpost** demo-video field; the earlier event snapshot
+identifies **OrganizerHQ** and an optional demo URL. These differences are unresolved.
 
-A local Windows app may need a reproducible install/demo instead of a public live endpoint. Confirm accepted judging access; never expose the native-control API publicly to fill a link. Keep the repository private until explicit user release instruction.
+Current status:
+- Neither Devpost nor OrganizerHQ submission has been made.
+- No public demo video has been recorded for the fresh project.
+- Template placeholders do not prove a submission requirement or successful submission.
+
+Action items for the team:
+- [ ] Confirm with organizers whether Devpost and OrganizerHQ are both required or one replaces the other.
+- [ ] Confirm whether a live-app URL or a local setup walkthrough satisfies judging access.
+- [ ] Member 4 records the authoritative answer here and in SUBMISSION_CHECKLIST.md.
+
+A local Windows app does not need a hosted public control endpoint merely to fill
+a link field. Never expose the native-control loopback API publicly.
+Keep the repository private until explicit user release instruction.
+
+---
 
 ## Template alignment checklist
 
-- [ ] Real member names and actual new contributions supplied.
-- [ ] Working versus planned features and exact model/provider status verified.
-- [ ] Setup commands checked by technical owners; environment example added only for implemented configuration.
-- [ ] Architecture, lessons, attribution and license accurate.
-- [ ] App/demo access and actual portal requirements confirmed.
-- [ ] No fabricated performance, guest result, uploaded video or accepted submission claim.
+- [ ] Real member names and actual new contributions supplied by the team.
+- [x] Working versus planned features clearly distinguished (README, DEMO_SCRIPT).
+- [x] N/A / pending marked for unimplemented technologies (README technology table).
+- [ ] Exact model tag and Ollama/provider version confirmed by Members 1 and 2.
+- [ ] Setup commands verified by technical owners (Members 2/3 own runtime setup).
+- [ ] `.env.example` added (placeholder only, by Member 3) when runtime config implemented.
+- [x] Architecture diagram present and labeled as proposed (mermaid in README).
+- [x] Challenges and learnings section present.
+- [x] Attribution and license accurate (ATTRIBUTION.md, LICENSE).
+- [ ] Demo video / recording slot filled with authorized newly recorded footage.
+- [ ] App/demo access and actual portal requirements confirmed with organizers.
+- [x] No fabricated performance, guest result, uploaded video or accepted submission claim.
+- [x] Repository private; no release authorized yet.

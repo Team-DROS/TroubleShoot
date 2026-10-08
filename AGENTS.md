@@ -23,3 +23,9 @@ The current prototype is hosted Gemma API only with a loopback Windows helper an
 installable PWA. Earlier local-first requirements describe the previous scope.
 Keep explicit cloud consent, server-side keys, approvals, human UAC, fresh checks,
 private repository and the prohibition on old prototype reuse.
+
+
+## Latest publication instruction
+The user explicitly authorized merging all fresh team work into main and making
+this repository public. This supersedes earlier private-until-instructed language.
+Keep secrets, raw private evidence and machine-local data excluded from Git.
