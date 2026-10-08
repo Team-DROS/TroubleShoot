@@ -6,7 +6,7 @@ Member 4 prepares; a designated authorized teammate submits. Repository remains 
 
 The user reports withdrawal of prototype-reuse permission on 8 October 2026. Start from scratch. Earlier permission is superseded. The supplied HACKATHON_AGENT_RULES.md remains a dated snapshot; confirm current announcements, check-in, track, development-agent policy and build window.
 
-Record the reversal's source/time if available. The removed import remains transparently in Git history. Confirm whether organizers accept this or require a separately disclosed repository with fresh history; do not conceal prior work.
+Record the reversal's source/time if available. This newly created repository has independent history and imports planning only. Disclose the team’s earlier separate prototype if asked; no old implementation or commits are present here.
 
 ## Before release
 
@@ -22,7 +22,7 @@ Record the reversal's source/time if available. The removed import remains trans
 
 Project name: TroubleShoot. Project link: https://github.com/Team-DROS/TroubleShoot (currently private).
 
-Description is not ready: the project is currently planning-only. After implementation, describe actual Gemma integration, bounded actions, measured verification, fresh contributions and limitations. Disclose that an earlier import was removed after organizer clarification.
+Description is not ready: only shared contracts and fresh unit tests currently exist. After implementation, describe actual Gemma integration, bounded actions, measured verification, fresh contributions and limitations. Disclose that an earlier import was removed after organizer clarification.
 
 Technologies: pending actual new manifests/runtime. List hosted transport only if implemented. Select Best Use of Gemma 4 and/or Best Open-Source AI Project only with required evidence and confirmed eligibility. Unplugged rules remain unknown. No demo URL exists; do not reuse old recordings.
 
@@ -40,4 +40,4 @@ Official sources:
 - [ ] Save acceptance/receipt, timestamp, link, final commit and challenge selection. Git push is not submission.
 - [ ] Stop build/submission changes at deadline unless organizers authorize an extension.
 
-Current status: no fresh application, tests or live evidence; no public release or accepted submission.
+Current status: shared contracts and tests started; no running application or live evidence; no public release or accepted submission.

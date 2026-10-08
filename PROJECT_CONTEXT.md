@@ -1,6 +1,6 @@
 # TroubleShoot — complete from-scratch project context
 
-Updated 8 October 2026, Asia/Calcutta. **Planning baseline only: no application, UI, tests, build configuration or working model integration exists yet.** Read AGENTS.md, the rules snapshot, docs/PROVENANCE.md, docs/RESTART.md and your member assignment.
+Updated 8 October 2026, Asia/Calcutta. **First shared foundation implemented: contract validation, synthetic fixture and unit tests. No running application, UI, model connection or Windows executor exists yet.** Read AGENTS.md, the rules snapshot, docs/PROVENANCE.md, docs/RESTART.md and your member assignment.
 
 ## 1. Organizer change and scope
 
@@ -35,11 +35,11 @@ Minimal browser UI → loopback API → session coordinator → Gemma provider �
 
 Use a small Python backend (FastAPI is an option), TypeScript/React UI if useful, local Ollama, and supported Windows libraries. Select dependencies for actual new requirements and create fresh manifests/locks. These are technology choices, not an instruction to recreate the old file structure or code.
 
-Thinker/actor/verifier are runtime roles with separate contexts using one model, not three loaded models or the four human members. Deterministic policy and measurable checks must constrain model output. No implementation already exists.
+Thinker/actor/verifier are runtime roles with separate contexts using one model, not three loaded models or the four human members. Deterministic policy and measurable checks must constrain model output. Only shared contracts exist so far; runtime components remain to be implemented.
 
-## 5. Proposed shared v1 contract — agree before implementation
+## 5. Shared v1 contract — first subset implemented
 
-Person 1 creates actual schemas and sample fixtures; Persons 2/3 consume them. The following names are a proposed new API, not working endpoints or compatibility requirements:
+Read docs/CONTRACTS.md and src/troubleshoot/contracts.py for the first implemented subset and synthetic fixture. Person 1 completes remaining schemas; Persons 2/3 consume them. The following names are a proposed new API, not working endpoints or compatibility requirements:
 
 - `GET /api/status`: configured provider/model, capabilities and separate readiness state. Configuration is not inference proof.
 - `POST /api/runs`: complaint, `mode=diagnose|repair`, provider choice, optional selected target, vision opt-in, cloud text/image consent. Return run ID.
@@ -98,7 +98,7 @@ Do not reuse a VM containing the previous app as demo evidence. Use clean OS/too
 
 ## 10. Validation and definition of done
 
-No tests/build currently exist. Members 1–3 write new meaningful tests: malformed decisions, unknown operations, no cloud fallback, token replay/expiry, cancellation, model failure, unauthorized endpoints, stale/wrong window, coordinate bounds, malicious screenshot text and failed postconditions.
+Fresh shared-contract unit tests exist; application build/runtime checks do not. Members 1–3 write new meaningful tests: malformed decisions, unknown operations, no cloud fallback, token replay/expiry, cancellation, model failure, unauthorized endpoints, stale/wrong window, coordinate bounds, malicious screenshot text and failed postconditions.
 
 Fresh live evidence must record commit/time, OS, model/provider, VM snapshot, complaint, before facts, approval/action, after facts, restoration and limitations. Healthy diagnosis, one guest repair, a computer-use workflow and denial/cancellation are target evidence. Record blocked paths honestly. A fixture screenshot or recorded simulation is not a live repair.
 

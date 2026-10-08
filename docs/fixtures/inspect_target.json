@@ -1,0 +1,15 @@
+{
+  "synthetic": true,
+  "observation": {
+    "observation_id": "obs-example",
+    "observed_at": "2026-10-08T11:00:00+05:30",
+    "target": {"handle": 100, "pid": 200, "started": "2026-10-08T10:59:00+05:30"}
+  },
+  "action": {
+    "action_id": "action-example",
+    "operation": "inspect_target",
+    "arguments": {},
+    "target": {"handle": 100, "pid": 200, "started": "2026-10-08T10:59:00+05:30"},
+    "observation_id": "obs-example"
+  }
+}

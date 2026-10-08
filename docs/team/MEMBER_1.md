@@ -4,7 +4,7 @@
 
 Read AGENTS.md, PROJECT_CONTEXT.md, docs/RESTART.md, HACKATHON_AGENT_RULES.md and docs/PROVENANCE.md first. Update your assigned branch with `git fetch origin`, `git switch <your-branch>` and `git pull --ff-only`; preserve local work if not clean. Do not reset/overwrite teammates' changes.
 
-**No application code exists. Author a new implementation from these requirements. Do not copy/port/read the removed prototype as a template, restore old tests/config, or reuse old results.** Use official library documentation and new synthetic fixtures. All listed source paths are future deliverables, not files already provided.
+**No application code exists. Author a new implementation from these requirements. Do not copy/port/read the removed prototype as a template, restore old tests/config, or reuse old results.** Use official library documentation and new synthetic fixtures. Read docs/CONTRACTS.md: the initial shared contract module and synthetic fixtures are provided. Other runtime paths are your fresh implementation deliverables.
 
 ## Ownership
 
@@ -28,3 +28,5 @@ Give Members 2/3 committed schema names, sample payloads, error types and execut
 ## Prompt for your AI agent
 
 “Read the shared fresh-build instructions and MEMBER_1.md. Work on member-1/gemma-orchestrator in owned paths only. The earlier prototype reuse permission has been withdrawn; author new code/docs from requirements, never copy or restore old implementation. Coordinate shared contracts, preserve private visibility and report fresh evidence honestly.”
+
+Initial package and contract tests have been started. Finish the remaining typed schemas and proceed to the local Gemma adapter; preserve the new contract boundary and coordinate any changes.
