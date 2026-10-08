@@ -22,7 +22,7 @@ def main():
     app = create_app(manager, token, port=args.port)
     print(f"Open http://127.0.0.1:{args.port}")
     print(f"Local session token (paste into UI): {token}")
-    print("Local provider/native executor integration pending. Hosted mode requires explicit consent.")
+    print("Local provider/native executor integration pending. Hosted mode requires explicit consent.", flush=True)
     uvicorn.run(app, host="127.0.0.1", port=args.port, access_log=False, proxy_headers=False)
 
 
