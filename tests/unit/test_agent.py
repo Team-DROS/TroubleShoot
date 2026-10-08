@@ -71,6 +71,22 @@ class DecisionSchemaTests(unittest.TestCase):
         self.assertEqual(restart["properties"]["arguments"]["properties"]["name"]["enum"][0], "Spooler")
         self.assertFalse(restart["additionalProperties"])
 
+    def test_used_calls_are_pruned_from_schema(self):
+        schema = decision_schema(self.catalog, "repair", used={"check_service": [{"name": "Spooler"}],
+                                                               "disk_usage": [{}]})
+        branches = {b["properties"]["operation"]["enum"][0]: b for b in schema["properties"]["tool"]["anyOf"]
+                    if b.get("type") == "object"}
+        self.assertNotIn("disk_usage", branches)
+        names = branches["check_service"]["properties"]["arguments"]["properties"]["name"]["enum"]
+        self.assertNotIn("Spooler", names)
+        self.assertIn("Audiosrv", names)
+        self.assertIn("Spooler", branches["restart_service"]["properties"]["arguments"]["properties"]["name"]["enum"])
+
+    def test_conclude_only_schema_has_no_tools(self):
+        schema = decision_schema(self.catalog, "repair", conclude_only=True)
+        self.assertEqual(schema["properties"]["next"]["enum"], ["conclude"])
+        self.assertEqual(schema["properties"]["tool"]["anyOf"], [{"type": "null"}])
+
     def test_valid_decisions(self):
         self.assertEqual(parse_decision(tool("check_service", {"name": "Spooler"}), self.catalog, "repair").operation,
                          "check_service")
@@ -215,6 +231,16 @@ class CoordinatorTests(unittest.TestCase):
                                     tool("check_service", {"name": "Spooler"}), tool("check_service", {"name": "Audiosrv"}))
         outcome, _ = run(provider)
         self.assertEqual(outcome.status, "budget_exhausted")
+
+    def test_last_step_must_conclude_and_lists_done_calls(self):
+        provider = ScriptedProvider(tool("disk_usage"), tool("network_status"), tool("check_service", {"name": "Spooler"}),
+                                    conclude("Spooler is stopped; that explains the stuck queue."))
+        outcome, _ = run(provider, mode="diagnose")
+        self.assertEqual(outcome.status, "diagnosed")
+        last = provider.requests[-1]
+        self.assertEqual(last.schema["properties"]["next"]["enum"], ["conclude"])
+        self.assertIn("last step", last.user)
+        self.assertIn('Already ran (results in HISTORY, do not repeat): disk_usage {}', last.user)
 
     def test_repair_without_change_is_not_claimed_fixed(self):
         outcome, _ = run(ScriptedProvider(conclude("Probably the cable")))
