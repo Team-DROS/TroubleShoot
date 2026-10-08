@@ -14,3 +14,6 @@ troubleshoot = "troubleshoot.api.__main__:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.data-files]
+"share/troubleshoot/web" = ["web/index.html", "web/app.js", "web/style.css"]

@@ -3,6 +3,7 @@
 import asyncio
 import json
 import secrets
+import sys
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -19,6 +20,8 @@ def create_app(manager, session_token, *, port=8765, web_root=None):
     authority = f"127.0.0.1:{port}"
     origin = f"http://{authority}"
     root = Path(web_root) if web_root else Path(__file__).resolve().parents[3] / "web"
+    if web_root is None and not root.is_dir():
+        root = Path(sys.prefix) / "share" / "troubleshoot" / "web"
 
     @asynccontextmanager
     async def lifespan(app):
@@ -83,8 +86,11 @@ def create_app(manager, session_token, *, port=8765, web_root=None):
     async def targets():
         if manager.executor is None:
             return {"targets": [], "available": False}
-        async with asyncio.timeout(manager.tool_seconds):
-            items = await manager.executor.targets()
+        try:
+            async with asyncio.timeout(manager.tool_seconds):
+                items = await manager.executor.targets()
+        except Exception:
+            raise RuntimeFailure("target_inventory_unavailable") from None
         return {"targets": items[:50], "available": True}
 
     @app.post("/api/runs", status_code=202)
