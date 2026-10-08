@@ -7,7 +7,8 @@ Owner: Member 2, branch `member-2/local-gemma-agent`. Standard library only: no 
 | `src/troubleshoot/providers/base.py` | Provider protocol shared with Member 3's hosted adapter |
 | `src/troubleshoot/providers/ollama.py` | Local Ollama transport |
 | `src/troubleshoot/agent/` | Decision schema, prompts, Think/Act/Verify coordinator, deterministic verdicts, simulation and CLI |
-| `tests/unit/test_provider_local.py`, `tests/unit/test_agent.py` | Unit tests (simulated HTTP server, scripted provider, simulated machine) |
+| `src/troubleshoot/agent/runtime_adapter.py` | Adapter for Member 3's session runtime provider hook |
+| `tests/unit/test_provider_local.py`, `tests/unit/test_agent*.py` | Unit tests (simulated HTTP server, scripted provider, simulated machine) |
 | `docs/evidence/local-model/` | Recorded real-inference runs (simulated tools) |
 
 ## Run it on a Gemma PC (PowerShell)
@@ -88,10 +89,11 @@ Ollama 0.40.1, `gemma4:e2b` 4.6B Q4_K_M, CPU-only container (4 cores, no GPU). D
 | Second eval (after fixes) | 6/6 | Median 43.7 s per decision on CPU |
 | Vision, synthetic screenshots | 2/2 | Injected banner ignored; no change made |
 | Vision, neutral complaint | 1/1 | Model read "Print Spooler: Stopped" from the image, fixed it, checks verified |
+| Through Member 3's runtime | Works with proposed patch | Without it every action expires after inference; with it repair verifies `resolved` and diagnose stays read-only |
 
 Gemma declared `completion, vision, audio, tools, thinking` capabilities through `/api/show`. Not yet measured: a team GPU PC, real Windows observations, larger tags, the hosted provider.
 
 ## Handoffs
 
-- **Member 3:** implement `providers/gemma_api.py` against `providers/base.py` and reuse `parse_json_object`. Wire `Coordinator.run` into the session runtime with `authorize`, `cancelled` and `emit`. `src/troubleshoot/providers/` has no `__init__.py` because packaging is yours; it imports as a namespace package today, but add one before relying on `setuptools.packages.find`.
-- **Member 1:** export one `ToolSpec` per registered operation (strict validator plus an argument JSON schema, ideally no-argument or single-enum shapes so repeated calls can be pruned), plus `observe`, `execute` and `postcheck` hooks. Mark only checks of the user's symptom with `symptom=True`. For guest-to-host inference set `TROUBLESHOOT_OLLAMA_URL=http://10.0.2.2:11434` and `TROUBLESHOOT_OLLAMA_ALLOW_LAN=1`, and start Ollama with `OLLAMA_HOST=0.0.0.0` on the host; this run is then reported as `lan`.
+- **Member 3, ready to plug in:** `SessionManager(providers={"ollama": local_adapter_from_env()}, executor=...)` with `from troubleshoot.agent.runtime_adapter import local_adapter_from_env`. `LocalGemmaAdapter` implements your proposed `status() -> dict` / `async decide(payload) -> {summary, action}` hook. It was verified live through your runtime; see [INTEGRATION_MEMBER3.md](evidence/local-model/INTEGRATION_MEMBER3.md). **Blocker:** apply or adapt `member3-rebind-after-inference.patch`, otherwise every real-model action expires the 5 s freshness check. Your `providers/gemma_api.py` can optionally adopt `providers/base.py` and `parse_json_object`; the multi-step `Coordinator` remains available if you later allow more than one action per run. `src/troubleshoot/providers/` has no `__init__.py` because packaging is yours; it imports as a namespace package today, but add one before relying on `setuptools.packages.find`.
+- **Member 1:** `runtime_adapter.MEMBER1_OPERATIONS` holds model-facing descriptions and argument schemas for your current operations (`toggle_checkbox` has `control_id` plus `On`/`Off`; the rest take no arguments). Tell Member 2 when an operation or argument changes. For the multi-step coordinator, export one `ToolSpec` per registered operation (strict validator plus an argument JSON schema, ideally no-argument or single-enum shapes so repeated calls can be pruned), plus `observe`, `execute` and `postcheck` hooks. Mark only checks of the user's symptom with `symptom=True`. For guest-to-host inference set `TROUBLESHOOT_OLLAMA_URL=http://10.0.2.2:11434` and `TROUBLESHOOT_OLLAMA_ALLOW_LAN=1`, and start Ollama with `OLLAMA_HOST=0.0.0.0` on the host; this run is then reported as `lan`.
