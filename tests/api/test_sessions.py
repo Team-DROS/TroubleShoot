@@ -38,7 +38,7 @@ class SessionTests(unittest.IsolatedAsyncioTestCase):
         self.approve(run)
         self.assertEqual((await self.completed(run))["verdict"], "resolved")
         self.assertEqual(self.executor.executions, 1)
-        self.assertEqual(self.executor.observations, 2)
+        self.assertEqual(self.executor.observations, 3)  # initial, after inference, after approval
 
     async def test_diagnose_never_mutates(self):
         run = await self.start("diagnose")

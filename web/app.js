@@ -52,6 +52,7 @@ function receive(item) {
   if (item.type === "approval") {
     approval = item.payload; $("approval").hidden = false;
     $("action-detail").textContent = JSON.stringify(safePayload, null, 2);
+    $("approval-time").textContent = `Approve within ${Math.max(0, item.payload.freshness_seconds ?? 5).toFixed(1)} seconds. After that the action expires; start a new run. Native checks can shorten this window.`;
     $("approve").disabled = false; $("reject").disabled = false;
   }
   if (item.type === "error") showError(item.payload.code);

@@ -80,7 +80,7 @@ def create_app(manager, session_token, *, port=8765, web_root=None):
 
     @app.get("/api/status")
     async def status():
-        return manager.status()
+        return await asyncio.to_thread(manager.status)
 
     @app.get("/api/targets")
     async def targets():
@@ -101,7 +101,7 @@ def create_app(manager, session_token, *, port=8765, web_root=None):
             options = RunRequest(**payload)
         except TypeError:
             raise ContractError("Invalid run fields") from None
-        run = manager.create(options, Target.from_dict(target) if target is not None else None)
+        run = await manager.create_run(options, Target.from_dict(target) if target is not None else None)
         return {"run_id": run.id, "simulation": manager.simulation}
 
     @app.get("/api/runs/{run_id}")

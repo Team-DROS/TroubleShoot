@@ -3,8 +3,10 @@
 Member 3's branch now includes a loopback API, session coordinator, hosted Gemma
 transport and browser UI. The original foundation notes below describe the shared
 starting point. This section supersedes their "next work" and "no endpoint" status.
-Provider/native hooks are proposals for owner review, **not an agreed Member 2
-provider protocol or a completed Member 1 integration**. No owner files were changed.
+Member 2's provider hook and Member 1's native executors are now merged and wired
+through `runtime/native.py`. Their source files are unchanged. Native approval
+uses the owner's exact state fingerprint; live combined guest validation remains
+pending. The integration update below supersedes the original proposal notes.
 
 ## HTTP and authentication
 
@@ -47,6 +49,13 @@ data: {"id":"3","type":"complete","timestamp":"2026-10-08T06:00:00+00:00","paylo
 
 ## Provider hook to agree with Member 2
 
+Integration update: startup imports `local_adapter_from_env` from
+`agent/runtime_adapter.py`. Its hook matches the documented runtime shape.
+`providers/base.py`, `providers/ollama.py`, and `agent/` are imported unchanged
+from Member 2 `41b1c9b`. Provider failures surface safe `local_<code>` errors and
+never select hosted/fixture alternatives. The single-action runtime uses the
+adapter, not the separate multi-step Coordinator.
+
 `SessionManager(providers={"ollama": adapter, "gemma_api": adapter}, executor=...)`
 injects components explicitly. No automatic import/fallback to missing providers.
 Proposed adapter methods used by this branch:
@@ -72,6 +81,22 @@ blocks vision. Agree any conversion to Member 2's eventual protocol in an adapte
 without editing that owner's files silently.
 
 ## Executor hook to agree with Member 1
+
+Integration update: `runtime/native.py` routes the window/system scopes to the
+unchanged owner executors, retaining authoritative metadata by observation ID.
+`operations_for(target)` limits the offered registry to the selected scope.
+`execute_authorized` supplies a threading cancellation event and bridges the
+native `AuthorizationRequest` to an authenticated runtime approval event. That
+event includes `native_fingerprint`, `summary`, and `freshness_seconds` in addition
+to the generic approval fields. It replaces the generic gate for native actions,
+so there is one exact human approval and no blanket native approver.
+
+Read-only window inspection and Windows diagnostics are enabled by default.
+Desktop mutation requires explicit scenario/recovery opt-in. `capture_target`
+is not offered until a scoped consented capture pipeline exists;
+`restore_spooler_stopped` is never in the model registry. Native recovery records
+are scanned at startup and pending records block repairs. PowerShell workers are
+included in the Python wheel.
 
 `runtime/ports.py` provides `Operation(validate, mutates, expected, recovery)`
 and `Snapshot(observation, facts)`. Native integration must supply:
@@ -106,12 +131,20 @@ Rejection/cancellation never starts the action. Target changes or evidence older
 than five seconds reject the action, even if the 60-second approval token has not
 expired. The UI must start a new run for a refreshed observation/proposal.
 
+The initial pre-inference observation may be older than five seconds when Gemma
+responds. The model proposal must match its initial identity/observation ID; the
+runtime then re-observes and compares identity/bounds/DPI, binds to the new ID,
+and emits the new observation before approval. This implements Member 2's patch.
+It does not relax the post-approval freshness rule. The UI states that limit and
+native tokens expire within the remaining observation freshness interval.
+
 `ExecutionResult.status`: `ok|blocked|failed|cancelled`.
 `ExecutionResult.recovery`: `none|pending|restored|failed`.
 Mutation starts with pending recovery; exceptions/timeouts preserve that state.
-Pending/failed recovery blocks later mutations in the same process. Durable,
-machine-bound recovery and an explicit recovery action are pending native
-integration; do not use process restart as a recovery mechanism.
+Pending/failed recovery blocks later mutations. The native bridge also checks
+durable records after restart and verifies a machine marker before mutation.
+No operator recovery endpoint is implemented; pending records need human
+inspection. Do not use process restart or a different path to bypass recovery.
 
 `Check(name,expected,actual,passed,observed_at)` is created by a deterministic
 verifier after execution. Its timestamp must be within the new verification

@@ -26,10 +26,70 @@ proxy or with multiple workers. Use the literal address, not `localhost`, becaus
 the API validates the exact Host/Origin and port. A custom port can be supplied
 with `scripts/start.ps1 -Port 8767`.
 
-No provider is assumed available. Local Gemma is the UI/API default, but Member
-2's adapter is not present in this branch and no local inference is attempted.
-The hosted adapter reports unavailable until a key is configured. Neither path
-silently substitutes fixtures or falls back to another provider.
+Local Gemma is the UI/API default. The launcher now uses Member 2's unchanged
+`local_adapter_from_env()`; it queries the configured Ollama runtime and reports
+unavailable if the runtime/model is absent. Neither provider substitutes fixtures
+or silently falls back. Optional hosted Gemma is still separate and consented.
+
+## Local Gemma and native Windows integration
+
+The integrated source comes from Member 2 revision `41b1c9b` and Member 1 revision
+`7623bc7`, merged with their history intact. The startup configuration is:
+
+```env
+TROUBLESHOOT_OLLAMA_URL=http://127.0.0.1:11434
+TROUBLESHOOT_OLLAMA_MODEL=gemma4:e2b
+TROUBLESHOOT_OLLAMA_ALLOW_LAN=0
+TROUBLESHOOT_DESKTOP_REPAIRS=0
+```
+
+Use the already-installed model on a teammate's machine; startup does not download
+one. See [Member 2 setup and measured results](LOCAL_GEMMA.md). Configuration is
+separate from proof of inference. Local provider status queries run outside the
+event loop so they cannot freeze approval/cancellation processing.
+
+On Windows the launcher attaches `NativeExecutorAdapter`, which wraps Member 1's
+unchanged `WindowsExecutor` and `DesktopExecutor`. Select **This computer (system
+diagnostics)** for OS/network/Spooler operations, or a permitted window for
+inspection. The computer entry is explicitly a logical backend-session scope,
+not a window handle. Native window identity and metadata remain server-side.
+
+After inference the runtime obtains fresh evidence and compares identity, bounds
+and DPI with the initial observation before rebinding the action. A changed target
+fails closed. **After human approval, old evidence is not silently refreshed**.
+Approval must finish within the bound observation's five-second freshness window.
+The UI shows the remaining window; native startup/checks may shorten it. If it
+expires, start a new run. This follows Member 1's current native approval policy.
+
+Native mutations request their exact `AuthorizationRequest` fingerprint from the
+UI at the executor's authorization boundary. Tokens are single-use and bound to
+run/action/arguments/target/observation; the native fingerprint identifies the
+specific observed state. There is no automatic native approver. The native worker
+independently checks freshness and identity immediately before input.
+
+Stopped-Spooler start is registered; `restore_spooler_stopped` is never available
+to the model. Service mutation needs a human-elevated process; the application
+does not bypass UAC. Do not stop the host service to test a repair: fault/repair
+validation belongs in a disposable guest with recovery.
+
+Recovery files default to `data/recovery` relative to the launch directory. Set
+`TROUBLESHOOT_RECOVERY_DIR` to a stable private path for an installed deployment.
+The bridge restricts Windows directory ACLs and checks its machine marker before
+mutation; Member 1's executor refuses service changes if persistence fails.
+Pending JSON records are reported in `/api/status` and block new repairs at
+startup. They require operator inspection; there is no automatic startup restore
+or API to dismiss/delete records. Keep this path stable across restarts.
+
+Desktop changes are disabled by default because arbitrary controls/closing an app
+have no generic rollback. Set `TROUBLESHOOT_DESKTOP_REPAIRS=1` only for an explicitly
+selected scenario with a documented human recovery. Approved desktop changes are
+journaled and retain a recovery blocker until operator inspection. Screenshot
+capture/model image transfer remains unavailable in the API/UI; no unconsented
+`capture_target` is offered to a model.
+
+The bridge verifies fresh native service/control/diagnostic facts and includes a
+failing original-symptom check until a real symptom verifier is supplied. Thus
+Spooler Running alone can produce **partial**, never a claim of restored printing.
 
 ## Optional hosted Gemma
 
@@ -85,7 +145,8 @@ The production launcher never imports these fixtures. Ctrl+C stops either server
 ```
 
 Install `requirements.lock` first. The wheel includes browser assets under
-`share/troubleshoot/web`. Source execution and installed execution are supported.
+`share/troubleshoot/web`, and includes `windows/diagnostics.ps1` and
+`desktop/worker.ps1` as package data. Source and installed execution are supported.
 The dependency lock is an exact version resolution, not a hash-verified lock.
 
 ## Integration limits
@@ -93,22 +154,22 @@ The dependency lock is an exact version resolution, not a hash-verified lock.
 - One action per run; four concurrent runs, at most 100 retained runs. Completed
   runs without pending/failed recovery are evicted oldest first. Recovery blockers
   are retained. Events and approvals are process-local memory.
-- Overall run budget: 90 seconds. Hosted transport: 25-second network timeout.
-  Tool calls: 10 seconds. Approval expires after 60 seconds, but the observed
+- Overall run budget: 180 seconds. Local adapter inference limit: 80 seconds.
+  Hosted transport: 25-second network timeout. The production launcher gives
+  observation/verification calls 45 seconds; native workers have their own bounded
+  20-second calls. Approval expires after at most 60 seconds, but the observed
   target must still satisfy the existing **five-second** freshness policy.
   Slow approvals therefore fail closed and require a new run. Refresh/reproposal
   UX is pending; do not weaken freshness to make a demo pass.
-- Stop cancels inference and prevents subsequent actions. A running tool receives
-  a cooperative cancellation event; cancellation is not evidence of restoration.
-  Async timeouts cannot stop a non-cooperative native thread/process. Native
-  adapters must independently bound work, revalidate input and honor cancellation.
+- Stop cancels the inference wait and prevents later actions. A synchronous local
+  HTTP call may continue until its own timeout. Native actions receive a bridged
+  threading cancellation event; the adapter drains their bounded worker before
+  releasing the execution lock. Cancellation is not evidence of restoration.
 - Recovery is reported and pending/failed recovery blocks further mutations.
-  No native recovery implementation, persistent recovery journal or recovery
-  endpoint exists yet. Do not attach a mutating production executor until those
-  machine-specific recovery requirements are implemented with Member 1.
-- No selected-window images, real native tools, UAC handling or local-model
-  coordinator are bundled. The current launcher supports hosted **text diagnosis**
-  when configured, and reports unresolved without deterministic postchecks.
+  Native service recovery and durable blockers are integrated; a recovery endpoint
+  and generic desktop rollback remain unavailable.
+- Real local inference with native execution in one disposable guest run is still
+  pending on a teammate's model/VM machine. No model/VM is required to run tests.
 - This is a local single-user integration build, not a hardened multi-user server.
   The bearer token grants access to all runs in this one process. There is no
   remote deployment, publication or event submission in this work.

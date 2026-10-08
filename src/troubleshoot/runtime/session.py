@@ -10,10 +10,11 @@ from datetime import datetime, timezone
 from time import monotonic
 
 from troubleshoot.contracts import (
-    Check, ContractError, ExecutionResult, RunRequest, Target, event,
+    ActionProposal, Check, ContractError, ExecutionResult, RunRequest, Target, event,
     parse_action, parse_decision, require_target, timestamp, verdict,
 )
 from troubleshoot.runtime.ports import RuntimeFailure
+from troubleshoot.providers.base import ProviderError
 
 
 def utcnow():
@@ -40,7 +41,7 @@ class Run:
 
 class SessionManager:
     def __init__(self, providers=None, executor=None, *, simulation=False,
-                 approval_seconds=60, run_seconds=90, tool_seconds=10):
+                 approval_seconds=60, run_seconds=180, tool_seconds=10):
         self.providers = dict(providers or {})
         self.executor = executor
         self.simulation = simulation
@@ -58,6 +59,7 @@ class SessionManager:
                  "images": False}) for name in ("ollama", "gemma_api")},
             "executor_available": self.executor is not None,
             "vision_available": False,
+            "native": self.executor.status() if self.executor and hasattr(self.executor, "status") else None,
         }
 
     def get(self, run_id):
@@ -76,12 +78,20 @@ class SessionManager:
                   "limitations": [limitation], "simulation": self.simulation})
         run.state = "complete"
 
-    def create(self, request, target=None):
+    async def create_run(self, request, target=None):
+        if request.provider not in self.providers:
+            raise RuntimeFailure("provider_unavailable")
+        provider_status = await asyncio.to_thread(self.providers[request.provider].status)
+        return self.create(request, target, provider_status=provider_status)
+
+    def create(self, request, target=None, *, provider_status=None):
+        if request.mode == "repair" and self.executor and hasattr(self.executor, "require_recovery_ready"):
+            self.executor.require_recovery_ready()
         if request.mode == "repair" and any(r.recovery in {"pending", "failed"} for r in self.runs.values()):
             raise RuntimeFailure("recovery_required")
         if request.provider not in self.providers:
             raise RuntimeFailure("provider_unavailable")
-        if not self.providers[request.provider].status()["configured"]:
+        if not (provider_status or self.providers[request.provider].status())["configured"]:
             raise RuntimeFailure("provider_unavailable")
         if request.vision_enabled:
             raise RuntimeFailure("vision_unavailable")
@@ -133,7 +143,7 @@ class SessionManager:
         except asyncio.CancelledError:
             self.finish(run, "cancelled", "Shutdown; in-flight changes may need recovery.")
         except Exception as exc:
-            code = exc.code if isinstance(exc, RuntimeFailure) else (
+            code = ("local_" + exc.code) if isinstance(exc, ProviderError) else exc.code if isinstance(exc, RuntimeFailure) else (
                 "policy_rejected" if isinstance(exc, ContractError) else "component_failure")
             # Never expose exception text: it can contain credentials/private model input.
             self.emit(run, "error", {"code": code})
@@ -174,6 +184,8 @@ class SessionManager:
         if self.stopped(run):
             return
         operations = self.executor.operations if self.executor else {}
+        if self.executor and hasattr(self.executor, "operations_for"):
+            operations = self.executor.operations_for(run.target)
         registry = {name: op.validate for name, op in operations.items()}
         provider_request = {
             "request": asdict(run.request),
@@ -192,13 +204,28 @@ class SessionManager:
         action = parse_action(decision["action"], registry)
         if snapshot is None:
             raise ContractError("An action needs an observation")
+        # Model inference outlasts the freshness window: re-observe the same
+        # target and bind the proposal to that observation before approval.
+        if action.target != snapshot.observation.target or action.observation_id != snapshot.observation.observation_id:
+            raise ContractError("Action does not match observed target")
+        current = await self._tool(self.executor.observe(run.target))
+        current.observation.require_fresh(utcnow())
+        if (current.observation.target != snapshot.observation.target
+                or current.observation.bounds != snapshot.observation.bounds
+                or current.observation.dpi != snapshot.observation.dpi):
+            raise ContractError("Target changed while the model was deciding")
+        snapshot = current
+        action = ActionProposal(action.action_id, action.operation, action.arguments,
+                                action.target, snapshot.observation.observation_id)
+        self.emit(run, "observation", asdict(snapshot))
         require_target(action, snapshot.observation, utcnow())
         operation = operations[action.operation]
         if run.request.mode == "diagnose" and operation.mutates:
             raise ContractError("Diagnose-only cannot mutate")
         bound_action = copy.deepcopy(action.to_dict())
         bound_digest = digest({"run": run.id, "action": bound_action})
-        if operation.mutates:
+        native_authorization = getattr(self.executor, "native_authorization", False)
+        if operation.mutates and not native_authorization:
             run.state = "awaiting_approval"
             run.choice = asyncio.get_running_loop().create_future()
             token = secrets.token_urlsafe(32)
@@ -207,6 +234,7 @@ class SessionManager:
                             "deadline": monotonic() + self.approval_seconds}
             self.emit(run, "approval", {"token": token, "action": bound_action,
                       "expires_in_seconds": self.approval_seconds,
+                      "freshness_seconds": max(0, 5 - (utcnow() - timestamp(snapshot.observation.observed_at)).total_seconds()),
                       "expected": operation.expected, "recovery": operation.recovery})
             try:
                 approved = await asyncio.wait_for(run.choice, self.approval_seconds)
@@ -238,8 +266,18 @@ class SessionManager:
             require_target(action, snapshot.observation, utcnow())
             run.state = "executing"
             run.recovery = "pending" if operation.mutates else "none"
-            result = await self._tool(self.executor.execute(
-                action, fresh.observation, run.request.mode, run.cancelled))
+            if native_authorization:
+                # Bind to the last server observation before dispatch. Native workers
+                # perform their own fresh checks and request exact state approval.
+                action = ActionProposal(action.action_id, action.operation, action.arguments,
+                                        action.target, fresh.observation.observation_id)
+                require_target(action, fresh.observation, utcnow())
+                result = await self.executor.execute_authorized(
+                    action, fresh.observation, run.request.mode, run.cancelled, run.id,
+                    lambda request: self._approve_native(run, action, fresh.observation, operation, request))
+            else:
+                result = await self._tool(self.executor.execute(
+                    action, fresh.observation, run.request.mode, run.cancelled))
             if not isinstance(result, ExecutionResult):
                 raise ContractError("Invalid executor result")
             run.recovery = result.recovery
@@ -260,6 +298,38 @@ class SessionManager:
             self.emit(run, "verification", {"checks": [asdict(c) for c in checks]})
             if not self.stopped(run):
                 self.finish(run, verdict(checks), "Only the listed symptom checks were verified.")
+
+    async def _approve_native(self, run, action, observation, operation, request):
+        if (request.run_id != run.id or request.action_id != action.action_id
+                or request.operation != action.operation or run.cancelled.is_set()):
+            return False
+        try:
+            require_target(action, observation, utcnow())
+        except ContractError:
+            return False
+        seconds = min(self.approval_seconds, 5 - (utcnow() - timestamp(observation.observed_at)).total_seconds())
+        if seconds <= 0:
+            return False
+        run.state = "awaiting_approval"
+        run.choice = asyncio.get_running_loop().create_future()
+        bound = action.to_dict()
+        token = secrets.token_urlsafe(32)
+        run.approval = {"token": token, "action": bound, "digest": digest({"run": run.id, "action": bound}),
+                        "deadline": monotonic() + seconds, "fingerprint": request.fingerprint}
+        self.emit(run, "approval", {"token": token, "action": bound,
+                  "expires_in_seconds": seconds, "freshness_seconds": seconds,
+                  "native_fingerprint": request.fingerprint, "summary": request.summary,
+                  "expected": operation.expected, "recovery": operation.recovery})
+        try:
+            approved = await asyncio.wait_for(run.choice, seconds)
+            require_target(action, observation, utcnow())
+            return approved is True and not run.cancelled.is_set()
+        except (TimeoutError, ContractError):
+            return False
+        finally:
+            run.approval = None
+            if run.state != "complete":
+                run.state = "executing"
 
     async def close(self):
         tasks = [r.task for r in self.runs.values() if r.task and not r.task.done()]
