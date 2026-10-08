@@ -188,7 +188,7 @@ The automatic launcher reserves a free port before opening a browser. If 8765 is
 - **PPT / presentation:** [Canva presentation](https://canva.link/qxf708x2k2ng9ma)
 - **YouTube:** [Watch the demo](https://youtu.be/q4sGxlhyulc)
 - **DEV.to Post:** [TroubleShoot: Building a Windows AI Assistant That Asks Before It Acts](https://dev.to/umasuthan/troubleshoot-building-a-windows-ai-assistant-that-asks-before-it-acts-4l57)
-- **Devpost :** (https://devpost.com/software/troubleshoot-8jc2su)
+- **Devpost :** https://devpost.com/software/troubleshoot-8jc2su
 
 ## Demo Video
 
