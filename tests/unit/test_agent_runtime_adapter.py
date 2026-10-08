@@ -91,6 +91,19 @@ class AdapterTests(unittest.TestCase):
                       if b.get("properties", {}).get("operation", {}).get("enum") == ["toggle_checkbox"])
         self.assertEqual(branch["properties"]["arguments"]["properties"]["state"]["enum"], ["On", "Off"])
 
+    def test_member1_mouse_schemas_match_validator_shapes(self):
+        from troubleshoot.agent.runtime_adapter import MEMBER1_OPERATIONS
+        expected = {"mouse_move": {"control_id", "x", "y"}, "mouse_click": {"control_id", "x", "y"},
+                    "mouse_double_click": {"control_id", "x", "y"},
+                    "mouse_scroll": {"control_id", "x", "y", "ticks"},
+                    "mouse_drag": {"control_id", "x", "y", "to_x", "to_y"}}
+        for name, keys in expected.items():
+            with self.subTest(name):
+                schema = MEMBER1_OPERATIONS[name][1]
+                self.assertEqual((set(schema["properties"]), set(schema["required"])), (keys, keys))
+                self.assertFalse(schema["additionalProperties"])
+        self.assertEqual(MEMBER1_OPERATIONS["mouse_scroll"][1]["properties"]["ticks"]["minimum"], -5)
+
     def test_unknown_operation_offered_without_arguments(self):
         ops = dict(OPERATIONS, mystery_tool={"mutates": False, "expected": "x", "recovery": "none"})
         provider = Scripted(CONCLUDE)
