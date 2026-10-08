@@ -1,4 +1,129 @@
-# Shared protocol v1 — first implementation
+# Shared protocol v1 — Member 3 integration surface
+
+Member 3's branch now includes a loopback API, session coordinator, hosted Gemma
+transport and browser UI. The original foundation notes below describe the shared
+starting point. This section supersedes their "next work" and "no endpoint" status.
+Provider/native hooks are proposals for owner review, **not an agreed Member 2
+provider protocol or a completed Member 1 integration**. No owner files were changed.
+
+## HTTP and authentication
+
+Every `/api/` request requires `Authorization: Bearer <local-session-token>`.
+The server accepts only its configured `127.0.0.1:port` Host and same-origin
+browser Origin. CLI requests without Origin still require the token. No CORS
+allowlist, cookie authentication, token query parameters or public bind is used.
+
+| Method/path | Input/output |
+|---|---|
+| `GET /api/status` | Default provider, provider configuration/readiness/model/capabilities, executor and vision availability, simulation label |
+| `GET /api/targets` | `{targets:[{label,target}],available}`; bounded to 50 entries |
+| `POST /api/runs` | RunRequest fields plus optional `target`; returns 202 `{run_id,simulation}` |
+| `GET /api/runs/{id}` | `{run_id,state,recovery,cancel_requested}` |
+| `GET /api/runs/{id}/events` | SSE with event id/type/data; accepts `Last-Event-ID` cursor, ends after complete |
+| `POST /api/runs/{id}/decision` | Exactly `{token,action_id,approve}`; approve is a boolean |
+| `POST /api/runs/{id}/cancel` | Empty JSON object; cooperative stop request and current recovery |
+
+JSON bodies are limited to 16 KiB. Unknown fields and missing consent fail with
+400 `invalid_request`. Missing/invalid bearer token: 401. Wrong Origin/Host: 403.
+Unknown run: 404. Invalid/expired/replayed approval: 409. Missing component or
+capacity/recovery blocker: 503. Error responses contain safe codes, not exception
+messages, API keys or upstream response bodies. There is no screenshot endpoint.
+
+Example request (the hosted variant also needs `provider:"gemma_api"` and
+`cloud_consent:true`):
+
+```json
+{"complaint":"The selected application is not responding","mode":"diagnose","provider":"ollama","vision_enabled":false,"cloud_consent":false,"cloud_images_consent":false,"target":null}
+```
+
+Example terminal SSE frame (illustrative values, not measured repair evidence):
+
+```text
+id: 3
+event: complete
+data: {"id":"3","type":"complete","timestamp":"2026-10-08T06:00:00+00:00","payload":{"verdict":"unresolved","recovery":"none","limitations":["Diagnosis only; no symptom postcondition was measured."],"simulation":true}}
+
+```
+
+## Provider hook to agree with Member 2
+
+`SessionManager(providers={"ollama": adapter, "gemma_api": adapter}, executor=...)`
+injects components explicitly. No automatic import/fallback to missing providers.
+Proposed adapter methods used by this branch:
+
+```python
+def status() -> dict:
+    # configured: bool; readiness: unavailable|unverified|responding|fixture;
+    # model: str|None; images: bool; optional structured_output description
+    ...
+
+async def decide(request: dict) -> dict:
+    # request = {request: asdict(RunRequest), observation: asdict(Snapshot)|None,
+    #            operations: {name: {mutates, expected, recovery}}}
+    # output = {summary: str, action: None|ActionProposal.to_dict()}
+    ...
+```
+
+Output is revalidated by the runtime using native operation argument validators.
+Unknown operations, shell extras and malformed decisions fail closed. No model
+verdict is accepted as verification. The hosted adapter additionally accepts an
+optional `images` array directly through dependency injection; the API currently
+blocks vision. Agree any conversion to Member 2's eventual protocol in an adapter
+without editing that owner's files silently.
+
+## Executor hook to agree with Member 1
+
+`runtime/ports.py` provides `Operation(validate, mutates, expected, recovery)`
+and `Snapshot(observation, facts)`. Native integration must supply:
+
+```python
+operations: dict[str, Operation]
+async def targets() -> list[dict]: ...  # [{label, target: asdict(Target)}]
+async def observe(target: Target) -> Snapshot: ...
+async def execute(action: ActionProposal, observation: Observation,
+                  mode: str, cancelled: asyncio.Event) -> ExecutionResult: ...
+async def verify(action: ActionProposal, complaint: str) -> list[Check]: ...
+```
+
+Operations use trusted fixed argument validators and deterministic mutation
+classification. Expected postcondition/recovery descriptions come from the
+registry, not model text. Native adapters must separately check policy, target
+identity, foreground/occlusion, coordinates, geometry/DPI, input freshness and
+cancellation immediately before input, with bounded native calls. A timeout in
+async Python alone cannot interrupt an independent native worker.
+
+Observation adds optional bounds `(left,top,right,bottom)` and positive DPI.
+The runtime compares new identity/geometry/DPI before execution. Coordinate
+validators and native foreground checks remain Member 1's responsibility.
+No UI screenshot/control metadata pipeline is implemented yet.
+
+## Approval, execution and verification
+
+One proposed action is allowed per run. Mutations require repair mode and a
+single-use random token bound to run, action, arguments, target and observation.
+The runtime snapshots the action and checks a canonical digest before execution.
+Rejection/cancellation never starts the action. Target changes or evidence older
+than five seconds reject the action, even if the 60-second approval token has not
+expired. The UI must start a new run for a refreshed observation/proposal.
+
+`ExecutionResult.status`: `ok|blocked|failed|cancelled`.
+`ExecutionResult.recovery`: `none|pending|restored|failed`.
+Mutation starts with pending recovery; exceptions/timeouts preserve that state.
+Pending/failed recovery blocks later mutations in the same process. Durable,
+machine-bound recovery and an explicit recovery action are pending native
+integration; do not use process restart as a recovery mechanism.
+
+`Check(name,expected,actual,passed,observed_at)` is created by a deterministic
+verifier after execution. Its timestamp must be within the new verification
+interval. No checks/all failed means unresolved; mixed checks mean partial;
+all passed means resolved **only for the listed symptom checks**. A successful
+execution result alone cannot mean resolved. Completion payloads contain verdict,
+recovery, limitations and simulation. Error/cancellation are distinct verdicts.
+
+See `docs/MEMBER_3_SETUP.md` for budgets and limits, and
+`docs/MEMBER_3_VALIDATION.md` for actual validation evidence.
+
+## Original shared foundation notes (historical starting point)
 
 Implemented module: `src/troubleshoot/contracts.py`. This is a validation foundation; it provides no model client, Windows executor, API server, UI or repair behavior.
 
