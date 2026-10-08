@@ -167,7 +167,7 @@ The automatic launcher reserves a free port before opening a browser. If 8765 is
 - **Website:** [TroubleShoot](https://troubleshoot-one.vercel.app/)
 - **PPT / presentation:** [Canva presentation](https://canva.link/qxf708x2k2ng9ma)
 - **YouTube:** [Watch the demo](https://youtu.be/q4sGxlhyulc)
-- **Submission / Devpost:** _Add project submission link here._
+- **DEV.to Post:** [TroubleShoot: Building a Windows AI Assistant That Asks Before It Acts](https://dev.to/umasuthan/troubleshoot-building-a-windows-ai-assistant-that-asks-before-it-acts-4l57)
 
 ## Demo Video
 
@@ -341,9 +341,9 @@ No old prototype results are carried over. Tests are not live repair evidence.
 
 ---
 
-## Devpost Submission
+## DEV.to Post
 
-**Devpost Project:** N/A — no project URL or accepted submission receipt is recorded. The supplied template asks for Devpost; confirm the actual organizer route before submitting.
+**DEV.to Post:** [TroubleShoot: Building a Windows AI Assistant That Asks Before It Acts](https://dev.to/umasuthan/troubleshoot-building-a-windows-ai-assistant-that-asks-before-it-acts-4l57)
 
 **Event:** Hacktoberfest Hack Day Coimbatore × INIT Club & Idea Club, 8 October 2026
 **Tracks considered:** Best Use of Gemma 4, Best Open-Source AI Project
@@ -382,7 +382,7 @@ Ticks below indicate README preparation is complete. Pending validation, missing
 - [x] Full hosted guest repair and original-symptom verification clearly identified as pending.
 - [x] PWA installation and deployment verification limits documented; website link included.
 - [x] Presentation and YouTube demo links included.
-- [x] Submission-link placeholder prepared; organizer submission and acceptance receipt remain unconfirmed.
+- [x] DEV.to project article linked; organizer submission acceptance remains unconfirmed.
 - [x] Repository/evidence review information provided for the team; final submission review remains with the team.
 
 README audit: compared against the user-supplied template on 8 October 2026 and current main `d87f9b7`. Project structure, evidence and experimental results are retained; links and checklist reflect the supplied submission materials. Tests do not establish live repairs or event acceptance.
