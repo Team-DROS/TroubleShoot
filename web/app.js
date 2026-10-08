@@ -1,5 +1,5 @@
 const $ = id => document.getElementById(id);
-let token = "", status = null, runId = null, approval = null;
+let token = "", status = null, runId = null, approval = null, starting = false, lastEventId = "0";
 
 function showError(message) { $("error").textContent = message; $("error").hidden = false; }
 function clearError() { $("error").hidden = true; }
@@ -20,7 +20,7 @@ function updateControls() {
   $("provider-status").textContent = provider
     ? `Model: ${provider.model || "not configured"} · ${provider.readiness}${status.simulation ? " · SYNTHETIC FIXTURE" : ""}`
     : "Connect to check provider readiness.";
-  $("start").disabled = Boolean(runId) || !provider?.configured ||
+  $("start").disabled = starting || Boolean(runId) || !provider?.configured ||
     ($("provider").value === "gemma_api" && !$("cloud").checked);
   $("start").textContent = $("mode").value === "repair" ? "Start repair review" : "Start diagnosis";
   $("stop").disabled = !runId;
@@ -44,6 +44,7 @@ $("connect").addEventListener("submit", async event => {
 for (const id of ["provider", "mode", "cloud"]) $(id).addEventListener("change", updateControls);
 
 function receive(item) {
+  lastEventId = item.id;
   const row = document.createElement("li");
   const safePayload = { ...item.payload }; delete safePayload.token;
   row.textContent = `${item.type} · ${JSON.stringify(safePayload)}`;
@@ -59,13 +60,13 @@ function receive(item) {
     $("verdict").textContent = `${item.payload.verdict}${item.payload.simulation ? " (synthetic fixture)" : ""}`;
     $("recovery").textContent = `Recovery: ${item.payload.recovery}`;
     $("limitations").textContent = item.payload.limitations.join(" ");
-    runId = null; approval = null; $("approval").hidden = true; updateControls();
+    runId = null; approval = null; $("approval").hidden = true; $("reconnect").hidden = true; updateControls();
   }
 }
 
 // Fetch streaming preserves the Authorization header; no token in URLs/cookies.
 async function streamEvents(id) {
-  const response = await api(`/api/runs/${id}/events`);
+  const response = await api(`/api/runs/${id}/events`, { headers: { "Last-Event-ID": lastEventId } });
   if (!response.body) throw new Error("Event stream unavailable; Stop remains available.");
   const reader = response.body.getReader(), decoder = new TextDecoder();
   let buffer = "";
@@ -86,7 +87,7 @@ async function streamEvents(id) {
 }
 
 $("run-form").addEventListener("submit", async event => {
-  event.preventDefault(); if (runId) return; clearError();
+  event.preventDefault(); if (runId || starting) return; clearError(); starting = true; lastEventId = "0";
   $("start").disabled = true;
   $("timeline").replaceChildren(); $("empty").hidden = false; $("result").hidden = true;
   try {
@@ -95,8 +96,16 @@ $("run-form").addEventListener("submit", async event => {
       cloud_consent: $("cloud").checked, vision_enabled: false, cloud_images_consent: false,
       target: $("target").value ? JSON.parse($("target").value) : null,
     }) })).json();
-    runId = result.run_id; updateControls(); await streamEvents(runId);
-  } catch (error) { showError(error.message); } finally { updateControls(); }
+    runId = result.run_id; starting = false; updateControls(); await streamEvents(runId);
+  } catch (error) { showError(error.message); $("reconnect").hidden = !runId; }
+  finally { starting = false; updateControls(); }
+});
+
+$("reconnect").addEventListener("click", async () => {
+  if (!runId) return;
+  $("reconnect").hidden = true; clearError();
+  try { await streamEvents(runId); }
+  catch (error) { showError(error.message); $("reconnect").hidden = !runId; }
 });
 
 async function decide(approve) {
