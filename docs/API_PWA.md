@@ -107,3 +107,13 @@ landing page exposes correct helper/setup links. Frontend production build, 10 R
 fixture checks, 7 console fixture checks and 42 API/runtime checks passed. Actual
 browser installation remains pending. Hosted deployment depends on Vercel's configured
 production branch; source changes alone are not proof of a completed deployment.
+
+
+## Launcher port conflicts
+
+The automatic launcher reserves a loopback socket before generating a session.
+If the requested port is occupied or reserved, it chooses an available port within
+the next 20 ports and reports the selected URL. The browser opens only after the
+server starts successfully, using that server's session token. Existing processes
+are not stopped or trusted. Explicit CLI --port without --open fails cleanly on
+collision. Three focused launcher checks and 42 API/runtime checks passed.
