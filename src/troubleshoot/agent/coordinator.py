@@ -8,6 +8,7 @@ re-observed before execution and the verdict comes from fresh checks.
 """
 
 import json
+import re
 import time
 import uuid
 from dataclasses import dataclass, field
@@ -24,6 +25,20 @@ from .verdict import EXECUTION_STATUSES, Check, Verdict, judge
 
 STATUSES = ("diagnosed", "completed", "needs_user", "denied", "cancelled", "error", "budget_exhausted")
 EVENT_TYPES = ("observation", "plan", "approval", "action", "verification", "complete", "error")
+_SAYS_NOT_FIXED = re.compile(r"\b(still (not|isn't|doesn't|won't|fail)|not (resolved|fixed)|persists?)\b", re.I)
+_SAYS_FIXED = re.compile(r"\b(is (now )?(fixed|resolved)|has been (fixed|resolved)|works now|working again)\b", re.I)
+
+
+def summarize(verdict: Verdict) -> str:
+    """Deterministic one-line account of a verified change, built only from checks."""
+    passed = [c.name for c in verdict.checks if c.passed]
+    failed = [c.name for c in verdict.checks if not c.passed]
+    text = f"Verified result: {verdict.verdict}."
+    if passed:
+        text += " Passed: " + ", ".join(passed) + "."
+    if failed:
+        text += " Failed: " + ", ".join(failed) + "."
+    return text
 
 
 @dataclass(frozen=True)
@@ -74,6 +89,7 @@ class Outcome:
     untrusted_instructions: list = field(default_factory=list)
     metrics: list = field(default_factory=list)
     error: dict | None = None
+    verified_summary: str | None = None   # from checks; `message` is the model's explanation
 
     def to_dict(self) -> dict:
         data = dict(self.__dict__)
@@ -98,6 +114,7 @@ class Coordinator:
         state = _RunState(self, complaint.strip(), mode, hooks, vision)
         outcome = state.loop()
         hooks.emit("complete", {"status": outcome.status, "message": outcome.message,
+                                "verified_summary": outcome.verified_summary,
                                 "verdict": None if outcome.verdict is None else outcome.verdict.to_dict()})
         return outcome
 
@@ -224,20 +241,17 @@ class _RunState:
 
     def _verified_summary(self) -> Outcome:
         """The model failed to summarise after a verified change: report the checks themselves."""
-        verdict = self.outcome.verdict
-        passed = [c.name for c in verdict.checks if c.passed]
-        failed = [c.name for c in verdict.checks if not c.passed]
-        message = f"Change verified as {verdict.verdict}."
-        if passed:
-            message += " Passed: " + ", ".join(passed) + "."
-        if failed:
-            message += " Failed: " + ", ".join(failed) + "."
         self.outcome.limitations.append("The model did not write a final summary; this message was generated from the checks")
-        return self.finish("completed", message)
+        return self.finish("completed", self.outcome.verified_summary)
 
     def _conclude(self, decision: Decision) -> Outcome:
-        if self.outcome.verdict is not None:
+        verdict = self.outcome.verdict
+        if verdict is not None:
             # The model writes the explanation; the checks decide the verdict.
+            if (verdict.verdict == "resolved" and _SAYS_NOT_FIXED.search(decision.message)) or \
+                    (verdict.verdict != "resolved" and _SAYS_FIXED.search(decision.message)):
+                self.outcome.limitations.append("The model's explanation conflicts with the verified result; "
+                                                "trust the verified summary")
             return self.finish("completed", decision.message)
         if self.mode == "repair":
             self.outcome.limitations.append("No change was made, so nothing was verified as fixed")
@@ -281,6 +295,7 @@ class _RunState:
             self.mutations += 1
             verdict = judge(result.status, self.hooks.postcheck(proposal, result))
             self.outcome.verdict = verdict
+            self.outcome.verified_summary = summarize(verdict)
             self.outcome.limitations.extend(n for n in verdict.limitations if n not in self.outcome.limitations)
             record["verification"] = {"verdict": verdict.verdict, "checks": [
                 f"{c.name}: expected {c.expected}, actual {c.actual}, {'PASS' if c.passed else 'FAIL'}"

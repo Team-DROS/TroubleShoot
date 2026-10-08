@@ -159,6 +159,16 @@ class CoordinatorTests(unittest.TestCase):
         self.assertIn("print queue drains", outcome.message)
         self.assertTrue(any("generated from the checks" in n for n in outcome.limitations))
 
+    def test_contradicting_explanation_is_flagged(self):
+        provider = ScriptedProvider(tool("restart_service", {"name": "Spooler"}, "queue drains"),
+                                    conclude("Restarted, but printing is still not working."))
+        outcome, hooks = run(provider)
+        self.assertEqual(outcome.verdict.verdict, "resolved")
+        self.assertEqual(outcome.verified_summary,
+                         "Verified result: resolved. Passed: Spooler running, print queue drains.")
+        self.assertTrue(any("conflicts" in n for n in outcome.limitations))
+        self.assertEqual(hooks.events[-1][1]["verified_summary"], outcome.verified_summary)
+
     def test_false_success_is_not_reported_as_fixed(self):
         provider = ScriptedProvider(
             tool("restart_service", {"name": "Spooler"}, "queue drains"),
@@ -167,6 +177,7 @@ class CoordinatorTests(unittest.TestCase):
         self.assertEqual(outcome.status, "completed")
         self.assertEqual(outcome.verdict.verdict, "unresolved")
         self.assertTrue(any("did not all pass" in n for n in outcome.limitations))
+        self.assertTrue(any("conflicts" in n for n in outcome.limitations))
 
     def test_diagnose_never_executes_mutation_even_if_model_insists(self):
         provider = ScriptedProvider(
