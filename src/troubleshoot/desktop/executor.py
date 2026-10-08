@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 from troubleshoot.contracts import ContractError, Observation, Target, fields
 from troubleshoot.windows.policy import ExecutionContext, ExecutionResult
 from troubleshoot.windows.runner import NativeError, PowerShellWorker
+from .mouse import MOUSE_VALIDATORS, require_control, validate_point
 
 
 def no_arguments(payload: dict) -> dict:
@@ -28,6 +29,7 @@ DESKTOP_VALIDATORS = {
     "toggle_checkbox": toggle_arguments,
     "graceful_close": no_arguments,
 }
+DESKTOP_VALIDATORS.update(MOUSE_VALIDATORS)
 
 
 @dataclass(frozen=True)
@@ -53,6 +55,41 @@ class DesktopExecutor:
 
     def list_targets(self) -> list[dict]:
         return self.worker.run("desktop", "list_targets", {})["targets"]
+
+    def mouse_action(self, operation: str, snapshot: WindowObservation, arguments: dict,
+                     context: ExecutionContext) -> ExecutionResult:
+        if operation not in MOUSE_VALIDATORS:
+            raise ContractError('Unregistered mouse operation')
+        arguments = MOUSE_VALIDATORS[operation](arguments)
+        try:
+            current = self._ready(snapshot)
+            for key in ('client_bounds', 'virtual_screen', 'cursor'):
+                if current.metadata.get(key) != snapshot.metadata.get(key) or key not in current.metadata:
+                    raise ContractError('Client/monitor/cursor state changed')
+            observed = next((c for c in snapshot.metadata['controls'] if c['control_id'] == arguments['control_id']), None)
+            actual = next((c for c in current.metadata['controls'] if c['control_id'] == arguments['control_id']), None)
+            if observed is None or actual != observed:
+                raise ContractError('Mouse control changed')
+            require_control(operation, actual)
+            validate_point(snapshot, actual, arguments['x'], arguments['y'])
+            if operation == 'mouse_drag':
+                validate_point(snapshot, actual, arguments['to_x'], arguments['to_y'])
+            context.require_mutation(operation, arguments, snapshot.wire(),
+                f"{operation} on selected {actual['type']} '{actual['name']}' at image pixel ({arguments['x']}, {arguments['y']}).")
+            snapshot.observation.require_fresh(self.clock())
+            result = self.worker.run_cancellable('desktop', operation,
+                {'snapshot': snapshot.wire(), 'control': observed, 'arguments': arguments}, context.cancelled)
+            if context.cancelled.is_set() or result.get('cancelled') is True:
+                return ExecutionResult('cancelled', result, None,
+                    ('An input may have occurred; obtain a fresh observation before recovery.',))
+            # Delivery is NOT application/symptom success, even when SendInput succeeds.
+            return ExecutionResult('partial' if result.get('input_delivered') is True else 'failed', result, None,
+                ('Mouse delivery/cursor position only; independently verify the control and original symptom.',))
+        except ContractError as exc:
+            return ExecutionResult('blocked', {'reason': str(exc)})
+        except NativeError as exc:
+            return ExecutionResult('cancelled' if exc.code in {'mouse_input_cancelled', 'emergency_stop'} else 'failed', {'error': exc.code}, None,
+                ('Input outcome may be uncertain; no automatic retry or semantic undo.',))
 
     def observe(self, target: Target) -> WindowObservation:
         import uuid
