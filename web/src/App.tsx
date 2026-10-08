@@ -185,7 +185,7 @@ export default function App() {
       </header>
 
       <main id="main">
-        <section className="hero" aria-labelledby="hero-title">
+        <section id="home" className="hero" aria-labelledby="hero-title">
           <div className="hero-content container">
             <div className="hero-copy">
               <p className="eyebrow">
