@@ -116,6 +116,19 @@ class SessionTests(unittest.IsolatedAsyncioTestCase):
             await self.start()
         self.assertEqual(caught.exception.code, "recovery_required")
 
+    async def test_retention_never_discards_pending_recovery(self):
+        self.executor.error = True
+        failed = await self.start()
+        self.approve(failed)
+        await self.completed(failed)
+        self.provider.action = False
+        for _ in range(101):
+            run = self.manager.create(RunRequest("Synthetic diagnosis"))
+            await self.completed(run)
+        self.assertIn(failed.id, self.manager.runs)
+        with self.assertRaises(RuntimeFailure):
+            self.manager.create(RunRequest("Synthetic repair", mode="repair"))
+
     async def test_model_failure_redacted_and_no_fallback(self):
         self.provider.error = True
         run = await self.start()

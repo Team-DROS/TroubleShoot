@@ -90,7 +90,8 @@ class SessionManager:
         if sum(r.state != "complete" for r in self.runs.values()) >= 4:
             raise RuntimeFailure("run_capacity")
         if len(self.runs) >= 100:
-            old = next((key for key, r in self.runs.items() if r.state == "complete"), None)
+            old = next((key for key, r in self.runs.items()
+                        if r.state == "complete" and r.recovery in {"none", "restored"}), None)
             if old is None:
                 raise RuntimeFailure("run_capacity")
             del self.runs[old]
