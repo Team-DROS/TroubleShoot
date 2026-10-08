@@ -1,0 +1,9 @@
+{
+  "spooler": "Running",
+  "pdf_print_verified": false,
+  "physical_print_verified": false,
+  "observed_at": "2026-10-08T07:41:06.1198947Z",
+  "reason": "Microsoft Print to PDF is not installed; service state is not print verification",
+  "status": "blocked",
+  "member1_source_revision": "507ebfce48f1c5ade4359649dddaef1a26d350c0"
+}

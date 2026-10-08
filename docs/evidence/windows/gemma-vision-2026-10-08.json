@@ -1,0 +1,30 @@
+{
+  "recorded_at": "2026-10-08T13:09:15.231891+05:30",
+  "provider_source_revision": "41b1c9b",
+  "provider_locality": "host-local; native execution in disposable Windows guest",
+  "capture_live": true,
+  "synthetic_ui": true,
+  "vision_state_matched": false,
+  "metrics": {
+    "provider": "ollama",
+    "model": "gemma4:e2b",
+    "latency_ms": 30316,
+    "prompt_tokens": 180,
+    "output_tokens": 55
+  },
+  "proposal": {
+    "visible_state": "unknown",
+    "operation": "none",
+    "state": "On",
+    "control_id": "7.10132.23692278",
+    "name": "Enable demonstration feature"
+  },
+  "executed": false,
+  "limitations": [
+    "Native approval/execution is a separate guest harness; no API/UI session integration.",
+    "Synthetic checkbox state is not a real troubleshooting symptom."
+  ],
+  "member1_source_revision": "507ebfce48f1c5ade4359649dddaef1a26d350c0",
+  "vision_used": true,
+  "proposal_validated": false
+}

@@ -1,0 +1,15 @@
+{
+  "fixture_closed": true,
+  "model": "gemma4:e2b",
+  "restored": true,
+  "after": "On",
+  "provider": "ollama",
+  "approved": true,
+  "synthetic_ui": true,
+  "symptom_verified": false,
+  "fixture_state_verified": true,
+  "before": "Off",
+  "observed_at": "2026-10-08T07:40:20.0041903Z",
+  "member1_source_revision": "507ebfce48f1c5ade4359649dddaef1a26d350c0",
+  "scope": "Real host-local Gemma text proposal from fresh guest accessibility facts; human guest approval; native mutation, feature-state check and baseline restoration. Harness only; no API token/session integration."
+}
