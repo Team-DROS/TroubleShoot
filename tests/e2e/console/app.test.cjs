@@ -23,7 +23,7 @@ function harness(fetch) {
     Option: function(text, value) { this.textContent = text; this.value = value; },
     fetch, TextDecoder, console,
   });
-  vm.runInContext(fs.readFileSync(path.join(__dirname, '../../../web/app.js'), 'utf8'), context);
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../../../src/troubleshoot/api/console/app.js'), 'utf8'), context);
   return { element, run: source => vm.runInContext(source, context) };
 }
 

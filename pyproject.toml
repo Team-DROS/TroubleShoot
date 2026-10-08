@@ -15,9 +15,7 @@ troubleshoot = "troubleshoot.api.__main__:main"
 [tool.setuptools.packages.find]
 where = ["src"]
 
-[tool.setuptools.data-files]
-"share/troubleshoot/web" = ["web/index.html", "web/app.js", "web/style.css"]
-
 [tool.setuptools.package-data]
 "troubleshoot.windows" = ["*.ps1"]
 "troubleshoot.desktop" = ["*.ps1"]
+"troubleshoot.api" = ["console/*"]

@@ -1,4 +1,4 @@
-"""Manual browser test only: python tests/e2e/web/serve_fixture.py.
+"""Manual browser test only: python tests/e2e/console/serve_fixture.py.
 
 Always labeled synthetic; never imported by the production launcher.
 """

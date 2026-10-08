@@ -3,7 +3,6 @@
 import asyncio
 import json
 import secrets
-import sys
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -19,9 +18,8 @@ def create_app(manager, session_token, *, port=8765, web_root=None):
         raise ValueError("Session token must be at least 32 ASCII characters")
     authority = f"127.0.0.1:{port}"
     origin = f"http://{authority}"
-    root = Path(web_root) if web_root else Path(__file__).resolve().parents[3] / "web"
-    if web_root is None and not root.is_dir():
-        root = Path(sys.prefix) / "share" / "troubleshoot" / "web"
+    # The operator console ships inside the package; web/ holds the public preview site.
+    root = Path(web_root) if web_root else Path(__file__).resolve().parent / "console"
 
     @asynccontextmanager
     async def lifespan(app):

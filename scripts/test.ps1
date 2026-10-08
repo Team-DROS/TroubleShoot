@@ -6,5 +6,5 @@ $env:PYTHONPATH = Join-Path $projectRoot 'src'
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 & $pythonPath -m unittest discover -s (Join-Path $projectRoot 'tests/api') -v
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-& node --test (Join-Path $projectRoot 'tests/e2e/web/app.test.cjs')
+& node --test (Join-Path $projectRoot 'tests/e2e/console/app.test.cjs')
 exit $LASTEXITCODE

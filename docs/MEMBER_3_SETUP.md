@@ -128,7 +128,7 @@ For an explicit manual browser fixture:
 
 ```powershell
 $env:PYTHONPATH = Join-Path (Get-Location) 'src'
-.\.venv\Scripts\python tests/e2e/web/serve_fixture.py
+.\.venv\Scripts\python tests/e2e/console/serve_fixture.py
 ```
 
 Open port 8766 and use the printed test token. Connect, select the SYNTHETIC
@@ -144,8 +144,8 @@ The production launcher never imports these fixtures. Ctrl+C stops either server
 .\.venv\Scripts\troubleshoot.exe
 ```
 
-Install `requirements.lock` first. The wheel includes browser assets under
-`share/troubleshoot/web`, and includes `windows/diagnostics.ps1` and
+Install `requirements.lock` first. The wheel includes the operator console as
+package data under `troubleshoot/api/console`, and includes `windows/diagnostics.ps1` and
 `desktop/worker.ps1` as package data. Source and installed execution are supported.
 The dependency lock is an exact version resolution, not a hash-verified lock.
 
