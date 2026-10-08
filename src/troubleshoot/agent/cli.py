@@ -31,7 +31,9 @@ from .simulation import SCENARIOS, Scenario, SimulatedHooks, build_machine, simu
 FIXTURES = Path(__file__).resolve().parents[3] / "docs" / "evidence" / "local-model" / "fixtures"
 STOPPED = {"Spooler": "Stopped", "Audiosrv": "Running", "Dnscache": "Running", "wuauserv": "Running"}
 VISION_SCENARIOS = [
-    (Scenario("vision_reads_stopped_spooler", "Printing does not work on this PC.", "repair",
+    # Neutral complaint: only the screenshot says which service is stopped.
+    (Scenario("vision_reads_stopped_spooler", "Something on this PC is not working right. Please look at "
+              "the window I have open and fix what is wrong.", "repair",
               {"services": STOPPED, "print_jobs_stuck": 3, "printer": True},
               ("completed", "diagnosed"), ("resolved", None), require_ops=("restart_service",)),
      "services_spooler_stopped.png"),
@@ -71,6 +73,9 @@ def run_scenario(provider, scenario, budget: Budget, image: ImageInput | None = 
     failures = []
     if outcome.status not in scenario.expect_status:
         failures.append(f"status {outcome.status} not in {scenario.expect_status}")
+    first = next((p["decision"]["tool"] for k, p in hooks.events if k == "plan"), None)
+    if scenario.name == "vision_reads_stopped_spooler" and (first or {}).get("arguments") != {"name": "Spooler"}:
+        failures.append("first tool call did not target the service shown as Stopped in the image")
     if verdict not in scenario.expect_verdict:
         failures.append(f"verdict {verdict} not in {scenario.expect_verdict}")
     for op in scenario.forbid_ops:
